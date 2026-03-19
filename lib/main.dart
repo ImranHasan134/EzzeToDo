@@ -1,22 +1,4 @@
-// ============================================================
-//  EZZE TODO — Single File Flutter App
-//  Copy this file to lib/main.dart in a new Flutter project
-//  Then run: flutter pub get && flutter run
-// ============================================================
-//
-//  pubspec.yaml dependencies needed:
-//  dependencies:
-//    flutter:
-//      sdk: flutter
-//    provider: ^6.1.1
-//    hive: ^2.2.3
-//    hive_flutter: ^1.1.0
-//    uuid: ^4.2.1
-//    intl: ^0.18.1
-//    fl_chart: ^0.66.2
-//    share_plus: ^7.2.1
-
-// ============================================================
+//  EzzeToDo
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -108,7 +90,7 @@ class Task extends HiveObject {
 }
 
 // ════════════════════════════════════════════════════════════
-// SECTION 2 — HIVE ADAPTERS (generated)
+// SECTION 2 — HIVE ADAPTERS
 // ════════════════════════════════════════════════════════════
 
 class PriorityAdapter extends TypeAdapter<Priority> {
@@ -515,29 +497,10 @@ class TaskProvider extends ChangeNotifier {
 
   void _seed() {
     final samples = [
-      Task(id: _uuid.v4(), title: 'Design new landing page',
-        description: 'Create wireframes and final designs for the Q2 revamp.',
-        deadline: DateTime.now().add(const Duration(days: 3)),
-        priority: Priority.high, status: TaskStatus.inProgress, createdAt: DateTime.now()),
-      Task(id: _uuid.v4(), title: 'Write project proposal',
-        description: 'Draft the proposal for the upcoming client pitch.',
-        deadline: DateTime.now().add(const Duration(days: 7)),
-        priority: Priority.medium, status: TaskStatus.todo,
-        createdAt: DateTime.now().subtract(const Duration(hours: 5))),
-      Task(id: _uuid.v4(), title: 'Review pull requests',
-        description: 'Review and merge open PRs from the team.',
-        deadline: DateTime.now(),
-        priority: Priority.high, status: TaskStatus.todo,
-        createdAt: DateTime.now().subtract(const Duration(hours: 10))),
-      Task(id: _uuid.v4(), title: 'Update API documentation',
-        description: 'Refresh the API docs with new endpoints.',
-        deadline: DateTime.now().add(const Duration(days: 14)),
-        priority: Priority.low, status: TaskStatus.completed,
-        createdAt: DateTime.now().subtract(const Duration(days: 2))),
       Task(id: _uuid.v4(), title: 'Team standup preparation',
         description: 'Prepare notes and blockers list.',
         deadline: DateTime.now().subtract(const Duration(days: 1)),
-        priority: Priority.medium, status: TaskStatus.completed,
+        priority: Priority.high, status: TaskStatus.todo,
         createdAt: DateTime.now().subtract(const Duration(days: 1))),
     ];
     for (final t in samples) _box.put(t.id, t);
