@@ -677,7 +677,7 @@ class TaskCard extends StatelessWidget {
                       GestureDetector(onTap: onDelete, child: Padding(
                         padding: const EdgeInsets.only(left: 8),
                         child: Icon(Icons.delete_outline_rounded, size: 18,
-                          color: theme.brightness == Brightness.dark ? AppColors.mutedDark : AppColors.mutedLight),
+                          color:Colors.red),
                       )),
                   ]),
                   const SizedBox(height: 8),
