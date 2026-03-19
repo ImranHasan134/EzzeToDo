@@ -1629,7 +1629,7 @@ class SettingsScreen extends StatelessWidget {
                   }
                 }),
               const AppDivider(),
-              SettingsTile(icon: Icons.delete_sweep_rounded, title: 'Clear All Tasks',
+              SettingsTile(icon: Icons.delete_sweep_outlined, title: 'Clear All Tasks',
                 subtitle: 'Permanently delete all tasks', iconColor: AppColors.error,
                 onTap: () => showDialog(context: context, builder: (_) => AlertDialog(
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
