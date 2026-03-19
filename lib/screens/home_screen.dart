@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../main.dart';
+import '../models/task.dart';
+import '../providers/theme_provider.dart';
+import '../theme/app_theme.dart';
+import '../providers/task_provider.dart';
+import '../widgets/common_widgets.dart';
 import 'add_or_edit_screen.dart';
 import 'task_detail_screen.dart';
 
@@ -45,7 +49,8 @@ class HomeScreen extends StatelessWidget {
             if (p.overdueTasks.isNotEmpty)
               Container(
                   margin: const EdgeInsets.symmetric(vertical: 10),
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
                       color: AppColors.highBg,
                       borderRadius: BorderRadius.circular(20)),
@@ -109,7 +114,8 @@ class HomeScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 32),
                   alignment: Alignment.center,
                   child: Column(children: [
-                    const Text('🎉', style: TextStyle(fontSize: 40)),
+                    const Text('🎉',
+                        style: TextStyle(fontSize: 40)),
                     const SizedBox(height: 8),
                     Text('All caught up for today!',
                         style: theme.textTheme.titleMedium),
@@ -117,15 +123,13 @@ class HomeScreen extends StatelessWidget {
                         style: theme.textTheme.bodySmall),
                   ]))
             else
-              ...p.todayTasks
-                  .take(5)
-                  .map((t) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: TaskCard(
-                            task: t,
-                            onTap: () => _goDetail(context, t.id),
-                            onComplete: () => p.markComplete(t.id)),
-                      )),
+              ...p.todayTasks.take(5).map((t) => Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: TaskCard(
+                        task: t,
+                        onTap: () => _goDetail(context, t.id),
+                        onComplete: () => p.markComplete(t.id)),
+                  )),
             if (p.allTasks.any((t) =>
                 t.priority == Priority.high &&
                 t.status != TaskStatus.completed)) ...[
@@ -140,7 +144,8 @@ class HomeScreen extends StatelessWidget {
                         child: TaskCard(
                             task: t,
                             onTap: () => _goDetail(context, t.id),
-                            onComplete: () => p.markComplete(t.id)),
+                            onComplete: () =>
+                                p.markComplete(t.id)),
                       )),
             ],
           ])),
@@ -153,10 +158,14 @@ class HomeScreen extends StatelessWidget {
   }
 
   void _goDetail(BuildContext ctx, String id) => Navigator.push(
-      ctx, MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: id)));
+      ctx,
+      MaterialPageRoute(
+          builder: (_) => TaskDetailScreen(taskId: id)));
 
   void _goAdd(BuildContext ctx) => Navigator.push(
-      ctx, MaterialPageRoute(builder: (_) => const AddOrEditScreen()));
+      ctx,
+      MaterialPageRoute(
+          builder: (_) => const AddOrEditScreen()));
 }
 
 class _ProgressBanner extends StatelessWidget {
@@ -181,12 +190,13 @@ class _ProgressBanner extends StatelessWidget {
                 CircularProgressIndicator(
                     value: p.completionRate,
                     strokeWidth: 8,
-                    backgroundColor: Colors.white.withOpacity(0.2),
-                    valueColor:
-                        const AlwaysStoppedAnimation(Colors.white),
+                    backgroundColor:
+                        Colors.white.withOpacity(0.2),
+                    valueColor: const AlwaysStoppedAnimation(
+                        Colors.white),
                     strokeCap: StrokeCap.round),
                 Text('${(p.completionRate * 100).round()}%',
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: Colors.white)),
@@ -196,32 +206,34 @@ class _ProgressBanner extends StatelessWidget {
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                const Text('Overall Progress',
-                    style: TextStyle(color: Colors.white70, fontSize: 13)),
-                const SizedBox(height: 4),
-                RichText(
-                    text: TextSpan(children: [
-                  TextSpan(
-                      text: '${p.completedCount}',
-                      style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white)),
-                  TextSpan(
-                      text: ' / ${p.totalCount}',
-                      style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.white.withOpacity(0.7))),
-                ])),
-                const Text('tasks completed',
-                    style: TextStyle(color: Colors.white70, fontSize: 13)),
-                const SizedBox(height: 10),
-                Row(children: [
-                  _Pill('${p.highCount} High', '🔴'),
-                  const SizedBox(width: 8),
-                  _Pill('${p.mediumCount} Med', '🟡'),
-                ]),
-              ])),
+            const Text('Overall Progress',
+                style: TextStyle(
+                    color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 4),
+            RichText(
+                text: TextSpan(children: [
+              TextSpan(
+                  text: '${p.completedCount}',
+                  style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white)),
+              TextSpan(
+                  text: ' / ${p.totalCount}',
+                  style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white.withOpacity(0.7))),
+            ])),
+            const Text('tasks completed',
+                style: TextStyle(
+                    color: Colors.white70, fontSize: 13)),
+            const SizedBox(height: 10),
+            Row(children: [
+              _Pill('${p.highCount} High', '🔴'),
+              const SizedBox(width: 8),
+              _Pill('${p.mediumCount} Med', '🟡'),
+            ]),
+          ])),
         ]),
       );
 }
@@ -238,6 +250,7 @@ class _Pill extends StatelessWidget {
             color: Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20)),
         child: Text('$icon $label',
-            style: const TextStyle(color: Colors.white, fontSize: 11)),
+            style: const TextStyle(
+                color: Colors.white, fontSize: 11)),
       );
 }

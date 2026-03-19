@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 
-import '../../main.dart';
+import '../theme/app_theme.dart';
+import '../providers/task_provider.dart';
+import '../widgets/common_widgets.dart';
 
 class StatsScreen extends StatelessWidget {
   const StatsScreen({super.key});
@@ -27,7 +29,8 @@ class StatsScreen extends StatelessWidget {
               Expanded(
                   child: StatBox(
                       label: 'Completion Rate',
-                      value: '${(p.completionRate * 100).round()}%',
+                      value:
+                          '${(p.completionRate * 100).round()}%',
                       color: AppColors.primary,
                       bgColor: AppColors.primarySurface)),
               const SizedBox(width: 10),
@@ -72,10 +75,11 @@ class StatsScreen extends StatelessWidget {
                   const SizedBox(width: 24),
                   Expanded(
                       child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
-                        _PRow('Completed', p.completedCount, p.totalCount,
-                            AppColors.completed),
+                        _PRow('Completed', p.completedCount,
+                            p.totalCount, AppColors.completed),
                         const SizedBox(height: 12),
                         _PRow('In Progress', p.inProgressCount,
                             p.totalCount, AppColors.inProgress),
@@ -89,23 +93,24 @@ class StatsScreen extends StatelessWidget {
                 title: 'By Priority',
                 child: Row(children: [
                   Expanded(
-                      child: _PTile('High', p.highCount, AppColors.high,
-                          AppColors.highBg)),
+                      child: _PTile('High', p.highCount,
+                          AppColors.high, AppColors.highBg)),
                   const SizedBox(width: 10),
                   Expanded(
                       child: _PTile('Medium', p.mediumCount,
                           AppColors.medium, AppColors.mediumBg)),
                   const SizedBox(width: 10),
                   Expanded(
-                      child: _PTile('Low', p.lowCount, AppColors.low,
-                          AppColors.lowBg)),
+                      child: _PTile('Low', p.lowCount,
+                          AppColors.low, AppColors.lowBg)),
                 ])),
             const SizedBox(height: 16),
             _Card(
                 title: '7-Day Activity',
                 child: SizedBox(
                     height: 180,
-                    child: _BarChart(data: p.dailyCompletionMap))),
+                    child:
+                        _BarChart(data: p.dailyCompletionMap))),
             const SizedBox(height: 16),
             if (p.totalCount > 0)
               _Card(
@@ -118,34 +123,42 @@ class StatsScreen extends StatelessWidget {
                               sections: [
                                 if (p.completedCount > 0)
                                   PieChartSectionData(
-                                      value: p.completedCount.toDouble(),
+                                      value: p.completedCount
+                                          .toDouble(),
                                       color: AppColors.completed,
-                                      title: '${p.completedCount}',
+                                      title:
+                                          '${p.completedCount}',
                                       radius: 60,
                                       titleStyle: const TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight:
+                                              FontWeight.w700,
                                           fontSize: 13)),
                                 if (p.inProgressCount > 0)
                                   PieChartSectionData(
-                                      value:
-                                          p.inProgressCount.toDouble(),
-                                      color: AppColors.inProgress,
-                                      title: '${p.inProgressCount}',
+                                      value: p.inProgressCount
+                                          .toDouble(),
+                                      color:
+                                          AppColors.inProgress,
+                                      title:
+                                          '${p.inProgressCount}',
                                       radius: 60,
                                       titleStyle: const TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight:
+                                              FontWeight.w700,
                                           fontSize: 13)),
                                 if (p.todoCount > 0)
                                   PieChartSectionData(
-                                      value: p.todoCount.toDouble(),
+                                      value:
+                                          p.todoCount.toDouble(),
                                       color: AppColors.todo,
                                       title: '${p.todoCount}',
                                       radius: 60,
                                       titleStyle: const TextStyle(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.w700,
+                                          fontWeight:
+                                              FontWeight.w700,
                                           fontSize: 13)),
                               ],
                               sectionsSpace: 3,
@@ -153,12 +166,16 @@ class StatsScreen extends StatelessWidget {
                             ))),
                         const SizedBox(width: 20),
                         Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment:
+                                MainAxisAlignment.center,
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
                             children: [
-                              _LI(AppColors.completed, 'Completed'),
+                              _LI(AppColors.completed,
+                                  'Completed'),
                               const SizedBox(height: 10),
-                              _LI(AppColors.inProgress, 'In Progress'),
+                              _LI(AppColors.inProgress,
+                                  'In Progress'),
                               const SizedBox(height: 10),
                               _LI(AppColors.todo, 'To Do'),
                             ]),
@@ -182,9 +199,13 @@ class _Card extends StatelessWidget {
             color: Theme.of(context).cardTheme.color,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: Theme.of(context).dividerColor, width: 1.5)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: Theme.of(context).textTheme.headlineSmall),
+                color: Theme.of(context).dividerColor,
+                width: 1.5)),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+          Text(title,
+              style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 16),
           child,
         ]),
@@ -200,7 +221,9 @@ class _PRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pct = total == 0 ? 0.0 : count / total;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
       Row(children: [
         Expanded(
             child: Text(label,
@@ -257,7 +280,8 @@ class _BarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = data.entries.toList();
-    final maxVal = data.values.fold(0, (a, b) => a > b ? a : b);
+    final maxVal =
+        data.values.fold(0, (a, b) => a > b ? a : b);
     return BarChart(BarChartData(
       maxY: (maxVal + 1).toDouble(),
       barGroups: List.generate(
@@ -304,7 +328,8 @@ class _BarChart extends StatelessWidget {
           show: true,
           drawVerticalLine: false,
           getDrawingHorizontalLine: (_) => FlLine(
-              color: Theme.of(context).dividerColor, strokeWidth: 1)),
+              color: Theme.of(context).dividerColor,
+              strokeWidth: 1)),
     ));
   }
 }
@@ -319,9 +344,10 @@ class _LI extends StatelessWidget {
         Container(
             width: 12,
             height: 12,
-            decoration:
-                BoxDecoration(color: color, shape: BoxShape.circle)),
+            decoration: BoxDecoration(
+                color: color, shape: BoxShape.circle)),
         const SizedBox(width: 8),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(label,
+            style: Theme.of(context).textTheme.bodySmall),
       ]);
 }

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../main.dart';
+import '../providers/theme_provider.dart';
+import '../theme/app_theme.dart';
+import '../providers/task_provider.dart';
+import '../widgets/common_widgets.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -18,8 +21,8 @@ class SettingsScreen extends StatelessWidget {
             floating: true,
             snap: true,
             titleSpacing: 16,
-            title:
-                Text('Settings', style: theme.textTheme.headlineMedium)),
+            title: Text('Settings',
+                style: theme.textTheme.headlineMedium)),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
           sliver: SliverList(
@@ -55,7 +58,8 @@ class SettingsScreen extends StatelessWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context)
                             .showSnackBar(SnackBar(
-                            content: const Text('Export failed.'),
+                            content:
+                                const Text('Export failed.'),
                             backgroundColor: AppColors.error,
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
@@ -76,7 +80,8 @@ class SettingsScreen extends StatelessWidget {
                             shape: RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.circular(16)),
-                            title: const Text('Clear All Tasks'),
+                            title:
+                                const Text('Clear All Tasks'),
                             content: const Text(
                                 'This will permanently delete ALL your tasks.'),
                             actions: [
@@ -97,14 +102,17 @@ class SettingsScreen extends StatelessWidget {
                                             'All tasks cleared'),
                                         backgroundColor:
                                             AppColors.error,
-                                        behavior:
-                                            SnackBarBehavior.floating,
-                                        shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(
-                                                    10))));
+                                        behavior: SnackBarBehavior
+                                            .floating,
+                                        shape:
+                                            RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius
+                                                        .circular(
+                                                            10))));
                                   },
-                                  child: const Text('Clear All')),
+                                  child:
+                                      const Text('Clear All')),
                             ],
                           ))),
             ]),
@@ -114,7 +122,8 @@ class SettingsScreen extends StatelessWidget {
               SettingsTile(
                   icon: Icons.notifications_rounded,
                   title: 'Task Reminders',
-                  subtitle: 'Get notified about upcoming deadlines',
+                  subtitle:
+                      'Get notified about upcoming deadlines',
                   iconColor: AppColors.medium,
                   trailing:
                       Switch(value: true, onChanged: (_) {})),
@@ -189,7 +198,8 @@ class _GL extends StatelessWidget {
             style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
-                color: Theme.of(context).textTheme.bodySmall?.color,
+                color:
+                    Theme.of(context).textTheme.bodySmall?.color,
                 letterSpacing: 1.2)),
       );
 }
@@ -204,7 +214,8 @@ class _SC extends StatelessWidget {
             color: Theme.of(context).cardTheme.color,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-                color: Theme.of(context).dividerColor, width: 1.5)),
+                color: Theme.of(context).dividerColor,
+                width: 1.5)),
         clipBehavior: Clip.hardEdge,
         child: Column(children: children),
       );
@@ -216,8 +227,8 @@ class _SP extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
             color: Colors.white.withOpacity(0.18),
             borderRadius: BorderRadius.circular(20)),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../main.dart';
+import '../models/task.dart';
+import '../theme/app_theme.dart';
+import '../providers/task_provider.dart';
+import '../widgets/common_widgets.dart';
 import 'add_or_edit_screen.dart';
 
 class TaskDetailScreen extends StatelessWidget {
@@ -11,7 +14,8 @@ class TaskDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.watch<TaskProvider>();
-    final task = p.allTasks.where((t) => t.id == taskId).firstOrNull;
+    final task =
+        p.allTasks.where((t) => t.id == taskId).firstOrNull;
     if (task == null) {
       return Scaffold(
           appBar: AppBar(title: const Text('Task')),
@@ -27,9 +31,11 @@ class TaskDetailScreen extends StatelessWidget {
         actions: [
           IconButton(
               icon: const Icon(Icons.edit_rounded),
-              onPressed: () => Navigator.push(context,
+              onPressed: () => Navigator.push(
+                  context,
                   MaterialPageRoute(
-                      builder: (_) => AddOrEditScreen(task: task)))),
+                      builder: (_) =>
+                          AddOrEditScreen(task: task)))),
           IconButton(
               icon: const Icon(Icons.delete_outline_rounded),
               onPressed: () => _del(context, task, p)),
@@ -37,7 +43,9 @@ class TaskDetailScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
             Row(children: [
               PriorityBadge(priority: task.priority),
               const SizedBox(width: 8),
@@ -49,7 +57,8 @@ class TaskDetailScreen extends StatelessWidget {
                         horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                         color: AppColors.highBg,
-                        borderRadius: BorderRadius.circular(20)),
+                        borderRadius:
+                            BorderRadius.circular(20)),
                     child: const Text('⚠ Overdue',
                         style: TextStyle(
                             color: AppColors.high,
@@ -70,7 +79,8 @@ class TaskDetailScreen extends StatelessWidget {
             if (task.description.isNotEmpty) ...[
               Text(task.description,
                   style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.textTheme.bodySmall?.color)),
+                      color:
+                          theme.textTheme.bodySmall?.color)),
               const SizedBox(height: 20),
             ],
             Container(
@@ -79,13 +89,16 @@ class TaskDetailScreen extends StatelessWidget {
                     color: theme.cardTheme.color,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: theme.dividerColor, width: 1.5)),
+                        color: theme.dividerColor,
+                        width: 1.5)),
                 child: Column(children: [
                   _IR(Icons.calendar_today_rounded, 'Deadline',
                       task.deadline != null
                           ? H.fmtDate(task.deadline)
                           : 'No deadline',
-                      vc: task.isOverdue ? AppColors.high : null),
+                      vc: task.isOverdue
+                          ? AppColors.high
+                          : null),
                   const SizedBox(height: 8),
                   const AppDivider(),
                   const SizedBox(height: 8),
@@ -132,29 +145,34 @@ class TaskDetailScreen extends StatelessWidget {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context)
                             .showSnackBar(SnackBar(
-                            content:
-                                const Text('✅ Task completed!'),
-                            backgroundColor: AppColors.completed,
+                            content: const Text(
+                                '✅ Task completed!'),
+                            backgroundColor:
+                                AppColors.completed,
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.circular(10))));
                       },
                       icon: const Icon(Icons.check_rounded),
-                      label: const Text('Mark as Complete'),
+                      label:
+                          const Text('Mark as Complete'),
                       style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               vertical: 16),
-                          backgroundColor: AppColors.completed))),
+                          backgroundColor:
+                              AppColors.completed))),
             const SizedBox(height: 12),
             Row(children: [
               Expanded(
                   child: OutlinedButton.icon(
-                      onPressed: () => Navigator.push(context,
+                      onPressed: () => Navigator.push(
+                          context,
                           MaterialPageRoute(
                               builder: (_) =>
                                   AddOrEditScreen(task: task))),
-                      icon: const Icon(Icons.edit_rounded, size: 16),
+                      icon: const Icon(Icons.edit_rounded,
+                          size: 16),
                       label: const Text('Edit'),
                       style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
@@ -162,11 +180,15 @@ class TaskDetailScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                   child: OutlinedButton.icon(
-                      onPressed: () => _del(context, task, p),
-                      icon: const Icon(Icons.delete_outline_rounded,
-                          size: 16, color: AppColors.error),
+                      onPressed: () =>
+                          _del(context, task, p),
+                      icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          size: 16,
+                          color: AppColors.error),
                       label: const Text('Delete',
-                          style: TextStyle(color: AppColors.error)),
+                          style: TextStyle(
+                              color: AppColors.error)),
                       style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
                               vertical: 14),
@@ -197,7 +219,8 @@ class TaskDetailScreen extends StatelessWidget {
                       p.deleteTask(t.id);
                       Navigator.pop(ctx);
                       Navigator.pop(ctx);
-                      ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(
+                      ScaffoldMessenger.of(ctx)
+                          .showSnackBar(SnackBar(
                           content: const Text('Task deleted'),
                           backgroundColor: AppColors.error,
                           behavior: SnackBarBehavior.floating,
@@ -221,13 +244,15 @@ class _IR extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Row(children: [
-      Icon(icon, size: 16, color: theme.textTheme.bodySmall?.color),
+      Icon(icon,
+          size: 16,
+          color: theme.textTheme.bodySmall?.color),
       const SizedBox(width: 8),
       Text(label, style: theme.textTheme.bodySmall),
       const Spacer(),
       Text(value,
-          style: theme.textTheme.titleMedium?.copyWith(
-              color: vc, fontWeight: FontWeight.w600)),
+          style: theme.textTheme.titleMedium
+              ?.copyWith(color: vc, fontWeight: FontWeight.w600)),
     ]);
   }
 }
