@@ -17,6 +17,7 @@ class HomeScreen extends StatelessWidget {
     final p = context.watch<TaskProvider>();
     final tp = context.watch<ThemeProvider>();
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final hour = DateTime.now().hour;
     final greeting = hour < 12
         ? 'Good morning'
@@ -25,103 +26,154 @@ class HomeScreen extends StatelessWidget {
             : 'Good evening';
 
     return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: CustomScrollView(slivers: [
+
+        // ── App Bar ────────────────────────────────────────
         SliverAppBar(
           floating: true,
           snap: true,
-          titleSpacing: 16,
-          title: RichText(
-              text: TextSpan(children: [
-            TextSpan(
-                text: 'Ezze',
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: AppColors.primary)),
-            TextSpan(
-                text: 'ToDo',
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: theme.textTheme.displaySmall?.color)),
-          ])),
+          titleSpacing: 20,
+          toolbarHeight: 64,
+          title: Row(children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(Icons.check_rounded,
+                  color: Colors.white, size: 18),
+            ),
+            const SizedBox(width: 10),
+            RichText(
+                text: TextSpan(children: [
+              TextSpan(
+                  text: 'Ezze',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      color: AppColors.primary)),
+              TextSpan(
+                  text: 'ToDo',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                      color: theme.textTheme.displaySmall?.color)),
+            ])),
+          ]),
           actions: [
             if (p.overdueTasks.isNotEmpty)
               Container(
-                  margin: const EdgeInsets.symmetric(vertical: 10),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10),
+                  margin: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                      color: AppColors.highBg,
-                      borderRadius: BorderRadius.circular(20)),
+                      color: AppColors.high.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                          color: AppColors.high.withOpacity(0.3),
+                          width: 1)),
                   child: Row(children: [
                     const Icon(Icons.warning_amber_rounded,
-                        size: 14, color: AppColors.high),
+                        size: 13, color: AppColors.high),
                     const SizedBox(width: 4),
                     Text('${p.overdueTasks.length} overdue',
                         style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
                             color: AppColors.high)),
                   ])),
-            IconButton(
-              icon: Icon(
-                  tp.isDark
-                      ? Icons.light_mode_rounded
-                      : Icons.dark_mode_rounded,
-                  color: theme.textTheme.bodySmall?.color),
-              onPressed: tp.toggleTheme,
+            const SizedBox(width: 4),
+            GestureDetector(
+              onTap: tp.toggleTheme,
+              child: Container(
+                margin: const EdgeInsets.symmetric(
+                    vertical: 14, horizontal: 8),
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.borderDark
+                      : AppColors.borderLight,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                    tp.isDark
+                        ? Icons.light_mode_rounded
+                        : Icons.dark_mode_rounded,
+                    size: 16,
+                    color: theme.textTheme.bodySmall?.color),
+              ),
             ),
+            const SizedBox(width: 8),
           ],
         ),
+
+        // ── Body ───────────────────────────────────────────
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
           sliver: SliverList(
               delegate: SliverChildListDelegate([
-            Text(greeting, style: theme.textTheme.bodySmall),
+
+            // Greeting
+            Text(greeting,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primary,
+                    letterSpacing: 0.3)),
             const SizedBox(height: 4),
-            Text("Let's get things done! 💪",
-                style: theme.textTheme.headlineMedium),
-            const SizedBox(height: 20),
-            _ProgressBanner(p: p),
+            Text("Let's get things done!",
+                style: TextStyle(
+                    fontSize: 26,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.8,
+                    color: theme.textTheme.displaySmall?.color)),
             const SizedBox(height: 24),
+
+            // Progress Banner
+            _ProgressBanner(p: p),
+            const SizedBox(height: 16),
+
+            // Stat Row
             Row(children: [
               Expanded(
-                  child: StatBox(
+                  child: _StatCard(
                       label: 'To Do',
                       value: '${p.todoCount}',
-                      color: AppColors.todo,
-                      bgColor: AppColors.todoBg)),
+                      accent: AppColors.todo,
+                      icon: Icons.circle_outlined)),
               const SizedBox(width: 10),
               Expanded(
-                  child: StatBox(
+                  child: _StatCard(
                       label: 'In Progress',
                       value: '${p.inProgressCount}',
-                      color: AppColors.inProgress,
-                      bgColor: AppColors.inProgressBg)),
+                      accent: AppColors.inProgress,
+                      icon: Icons.timelapse_rounded)),
               const SizedBox(width: 10),
               Expanded(
-                  child: StatBox(
+                  child: _StatCard(
                       label: 'Done',
                       value: '${p.completedCount}',
-                      color: AppColors.completed,
-                      bgColor: AppColors.completedBg)),
+                      accent: AppColors.completed,
+                      icon: Icons.check_circle_rounded)),
             ]),
-            const SizedBox(height: 24),
-            SectionHeader(title: "Today's Tasks"),
+            const SizedBox(height: 28),
+
+            // Today's Tasks
+            _SectionLabel(
+                title: "Today's Tasks", accent: AppColors.todo),
+            const SizedBox(height: 12),
             if (p.todayTasks.isEmpty)
-              Container(
-                  padding: const EdgeInsets.symmetric(vertical: 32),
-                  alignment: Alignment.center,
-                  child: Column(children: [
-                    const Text('🎉',
-                        style: TextStyle(fontSize: 40)),
-                    const SizedBox(height: 8),
-                    Text('All caught up for today!',
-                        style: theme.textTheme.titleMedium),
-                    Text('No tasks due today.',
-                        style: theme.textTheme.bodySmall),
-                  ]))
+              _EmptyCard(
+                emoji: '🎉',
+                title: 'All caught up!',
+                subtitle: 'No tasks due today.',
+              )
             else
               ...p.todayTasks.take(5).map((t) => Padding(
                     padding: const EdgeInsets.only(bottom: 10),
@@ -130,10 +182,17 @@ class HomeScreen extends StatelessWidget {
                         onTap: () => _goDetail(context, t.id),
                         onComplete: () => p.markComplete(t.id)),
                   )),
+
+            // High Priority
             if (p.allTasks.any((t) =>
                 t.priority == Priority.high &&
                 t.status != TaskStatus.completed)) ...[
-              SectionHeader(title: '🔴 High Priority'),
+              const SizedBox(height: 8),
+              _SectionLabel(
+                  title: 'High Priority',
+                  accent: AppColors.high,
+                  icon: Icons.local_fire_department_rounded),
+              const SizedBox(height: 12),
               ...p.allTasks
                   .where((t) =>
                       t.priority == Priority.high &&
@@ -144,16 +203,15 @@ class HomeScreen extends StatelessWidget {
                         child: TaskCard(
                             task: t,
                             onTap: () => _goDetail(context, t.id),
-                            onComplete: () =>
-                                p.markComplete(t.id)),
+                            onComplete: () => p.markComplete(t.id)),
                       )),
             ],
           ])),
         ),
       ]),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () => _goAdd(context),
-          child: const Icon(Icons.add_rounded, size: 28)),
+
+      // FAB
+      floatingActionButton: _AddFab(onTap: () => _goAdd(context)),
     );
   }
 
@@ -164,93 +222,313 @@ class HomeScreen extends StatelessWidget {
 
   void _goAdd(BuildContext ctx) => Navigator.push(
       ctx,
-      MaterialPageRoute(
-          builder: (_) => const AddOrEditScreen()));
+      MaterialPageRoute(builder: (_) => const AddOrEditScreen()));
 }
+
+// ═══════════════════════════════════════════════════════════
+// PROGRESS BANNER
+// ═══════════════════════════════════════════════════════════
 
 class _ProgressBanner extends StatelessWidget {
   final TaskProvider p;
   const _ProgressBanner({required this.p});
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-              colors: [Color(0xFF534AB7), Color(0xFF7F77DD)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Row(children: [
+  Widget build(BuildContext context) {
+    final pct = (p.completionRate * 100).round();
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+        Row(crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+          // Ring
           SizedBox(
-              width: 80,
-              height: 80,
-              child: Stack(alignment: Alignment.center, children: [
-                CircularProgressIndicator(
-                    value: p.completionRate,
-                    strokeWidth: 8,
-                    backgroundColor:
-                        Colors.white.withOpacity(0.2),
-                    valueColor: const AlwaysStoppedAnimation(
-                        Colors.white),
-                    strokeCap: StrokeCap.round),
-                Text('${(p.completionRate * 100).round()}%',
-                    style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white)),
-              ])),
-          const SizedBox(width: 20),
+            width: 72,
+            height: 72,
+            child: Stack(alignment: Alignment.center, children: [
+              SizedBox(
+                width: 72,
+                height: 72,
+                child: CircularProgressIndicator(
+                  value: p.completionRate,
+                  strokeWidth: 7,
+                  strokeCap: StrokeCap.round,
+                  backgroundColor:
+                      Colors.white.withOpacity(0.15),
+                  valueColor: const AlwaysStoppedAnimation(
+                      Colors.white),
+                ),
+              ),
+              Text('$pct%',
+                  style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      letterSpacing: -0.5)),
+            ]),
+          ),
+          const SizedBox(width: 18),
           Expanded(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-            const Text('Overall Progress',
+            Text('Overall Progress',
                 style: TextStyle(
-                    color: Colors.white70, fontSize: 13)),
+                    color: Colors.white.withOpacity(0.65),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.3)),
             const SizedBox(height: 4),
             RichText(
                 text: TextSpan(children: [
               TextSpan(
                   text: '${p.completedCount}',
                   style: const TextStyle(
-                      fontSize: 28,
+                      fontSize: 32,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white)),
+                      color: Colors.white,
+                      letterSpacing: -1)),
               TextSpan(
-                  text: ' / ${p.totalCount}',
+                  text: ' / ${p.totalCount} tasks',
                   style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withOpacity(0.7))),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white.withOpacity(0.6))),
             ])),
-            const Text('tasks completed',
-                style: TextStyle(
-                    color: Colors.white70, fontSize: 13)),
-            const SizedBox(height: 10),
-            Row(children: [
-              _Pill('${p.highCount} High', '🔴'),
-              const SizedBox(width: 8),
-              _Pill('${p.mediumCount} Med', '🟡'),
-            ]),
           ])),
         ]),
-      );
+        const SizedBox(height: 16),
+        Container(height: 1, color: Colors.white.withOpacity(0.12)),
+        const SizedBox(height: 14),
+        Row(children: [
+          _BannerPill(
+              label: '${p.highCount} High',
+              color: const Color(0xFFFF6B6B)),
+          const SizedBox(width: 8),
+          _BannerPill(
+              label: '${p.mediumCount} Medium',
+              color: const Color(0xFFFFB347)),
+          const SizedBox(width: 8),
+          _BannerPill(
+              label: '${p.lowCount} Low',
+              color: const Color(0xFF3DD68C)),
+        ]),
+      ]),
+    );
+  }
 }
 
-class _Pill extends StatelessWidget {
-  final String label, icon;
-  const _Pill(this.label, this.icon);
+class _BannerPill extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _BannerPill({required this.label, required this.color});
 
   @override
   Widget build(BuildContext context) => Container(
         padding:
-            const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.18),
-            borderRadius: BorderRadius.circular(20)),
-        child: Text('$icon $label',
-            style: const TextStyle(
-                color: Colors.white, fontSize: 11)),
+          color: Colors.white.withOpacity(0.12),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(
+              color: Colors.white.withOpacity(0.1), width: 1),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+              width: 6,
+              height: 6,
+              decoration:
+                  BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600)),
+        ]),
+      );
+}
+
+// ═══════════════════════════════════════════════════════════
+// STAT CARD
+// ═══════════════════════════════════════════════════════════
+
+class _StatCard extends StatelessWidget {
+  final String label, value;
+  final Color accent;
+  final IconData icon;
+  const _StatCard({
+    required this.label,
+    required this.value,
+    required this.accent,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+            color: isDark
+                ? AppColors.borderDark
+                : AppColors.borderLight,
+            width: 1.2),
+      ),
+      child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: accent.withOpacity(0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: accent),
+        ),
+        const SizedBox(height: 10),
+        Text(value,
+            style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.8,
+                color: accent)),
+        const SizedBox(height: 2),
+        Text(label,
+            style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                color: isDark
+                    ? AppColors.mutedDark
+                    : AppColors.mutedLight)),
+      ]),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SECTION LABEL
+// ═══════════════════════════════════════════════════════════
+
+class _SectionLabel extends StatelessWidget {
+  final String title;
+  final Color accent;
+  final IconData? icon;
+  const _SectionLabel(
+      {required this.title, required this.accent, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Row(children: [
+      Container(
+        width: 3,
+        height: 18,
+        decoration: BoxDecoration(
+          color: accent,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      ),
+      const SizedBox(width: 10),
+      if (icon != null) ...[
+        Icon(icon, size: 16, color: accent),
+        const SizedBox(width: 6),
+      ],
+      Text(title,
+          style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.3,
+              color: theme.textTheme.displaySmall?.color)),
+    ]);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// EMPTY CARD
+// ═══════════════════════════════════════════════════════════
+
+class _EmptyCard extends StatelessWidget {
+  final String emoji, title, subtitle;
+  const _EmptyCard(
+      {required this.emoji,
+      required this.title,
+      required this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 28),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+            color: isDark
+                ? AppColors.borderDark
+                : AppColors.borderLight,
+            width: 1.2),
+      ),
+      child: Column(children: [
+        Text(emoji, style: const TextStyle(fontSize: 36)),
+        const SizedBox(height: 10),
+        Text(title,
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? AppColors.textDark
+                    : AppColors.textLight)),
+        const SizedBox(height: 4),
+        Text(subtitle,
+            style: TextStyle(
+                fontSize: 13,
+                color: isDark
+                    ? AppColors.mutedDark
+                    : AppColors.mutedLight)),
+      ]),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// FAB
+// ═══════════════════════════════════════════════════════════
+
+class _AddFab extends StatelessWidget {
+  final VoidCallback onTap;
+  const _AddFab({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.add_rounded,
+              color: Colors.white, size: 28),
+        ),
       );
 }
