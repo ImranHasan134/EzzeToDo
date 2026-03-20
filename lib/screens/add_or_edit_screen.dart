@@ -126,36 +126,6 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
                 fontWeight: FontWeight.w800,
                 letterSpacing: -0.4,
                 color: theme.textTheme.displaySmall?.color)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: GestureDetector(
-              onTap: _saving ? null : _save,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: _saving
-                      ? AppColors.primary.withOpacity(0.5)
-                      : AppColors.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: _saving
-                    ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white))
-                    : Text(isEdit ? 'Save' : 'Add',
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13)),
-              ),
-            ),
-          ),
-        ],
       ),
       body: Form(
         key: _fk,

@@ -220,28 +220,12 @@ class TaskProvider extends ChangeNotifier {
           createdAt: DateTime.now().subtract(const Duration(hours: 5))),
       Task(
           id: _uuid.v4(),
-          title: 'Review pull requests',
-          description: 'Review and merge open PRs from the team.',
-          deadline: DateTime.now(),
-          priority: Priority.high,
-          status: TaskStatus.todo,
-          createdAt: DateTime.now().subtract(const Duration(hours: 10))),
-      Task(
-          id: _uuid.v4(),
           title: 'Update API documentation',
           description: 'Refresh the API docs with new endpoints.',
           deadline: DateTime.now().add(const Duration(days: 14)),
           priority: Priority.low,
           status: TaskStatus.completed,
           createdAt: DateTime.now().subtract(const Duration(days: 2))),
-      Task(
-          id: _uuid.v4(),
-          title: 'Team standup preparation',
-          description: 'Prepare notes and blockers list.',
-          deadline: DateTime.now().subtract(const Duration(days: 1)),
-          priority: Priority.medium,
-          status: TaskStatus.completed,
-          createdAt: DateTime.now().subtract(const Duration(days: 1))),
     ];
     for (final t in samples) _box.put(t.id, t);
     _tasks = _box.values.toList();
