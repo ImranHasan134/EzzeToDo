@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'main_screen.dart'; // Routes to your app's main navigation hub
+import 'main_screen.dart';
 
 enum GifSize { small, medium, large, custom }
 
@@ -18,7 +18,6 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
 
-    // Trigger branding animation shortly after launch
     Future.delayed(const Duration(milliseconds: 400), () {
       if (mounted) setState(() => _showBranding = true);
     });
@@ -27,18 +26,15 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _startExitTimer() async {
-    // 1. Wait for the GIF to play out
     await Future.delayed(const Duration(milliseconds: 2800));
 
     if (!mounted) return;
 
-    // 2. Start fading out the GIF and Text
     setState(() {
       _isExiting = true;
       _showBranding = false;
     });
 
-    // 3. Wait exactly 800ms to match the fade-out duration
     await Future.delayed(const Duration(milliseconds: 800));
 
     _navigateToNext();
@@ -47,15 +43,26 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigateToNext() {
     if (!mounted) return;
 
-    // Premium Cross-Fade directly to your RootScreen
+    // 🔴 PREMIUM TRANSITION: Smooth Fade + Subtle Upward Slide
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 1000),
+        transitionDuration: const Duration(milliseconds: 1200),
         pageBuilder: (context, animation, secondaryAnimation) => const RootScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          final curvedAnimation = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutQuart, // A very luxurious, slow-settling curve
+          );
+
           return FadeTransition(
-            opacity: CurvedAnimation(parent: animation, curve: Curves.easeIn),
-            child: child,
+            opacity: curvedAnimation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0.0, 0.05), // Starts slightly lower
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: child,
+            ),
           );
         },
       ),
@@ -73,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen> {
         return screenWidth * 0.6;
       case GifSize.custom:
       default:
-        return 350.0; // Your custom size
+        return 350.0;
     }
   }
 
@@ -85,7 +92,6 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // ── CENTER ANIMATED GIF ──
           Center(
             child: AnimatedOpacity(
               duration: const Duration(milliseconds: 500),
@@ -98,8 +104,6 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
           ),
-
-          // ── BOTTOM ANIMATED BRANDING ──
           Align(
             alignment: Alignment.bottomCenter,
             child: SafeArea(

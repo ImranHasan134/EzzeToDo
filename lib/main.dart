@@ -9,10 +9,10 @@ import 'theme/app_theme.dart';
 import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/user_provider.dart';
-import 'screens/main_screen.dart';
-import 'services/notification_service.dart';
 import 'screens/splash_screen.dart';
+import 'services/notification_service.dart';
 
+// 👇 THIS IS THE MAIN FUNCTION YOUR IDE IS LOOKING FOR
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -32,7 +32,7 @@ void main() async {
   final themeProvider = ThemeProvider();
   await themeProvider.init();
 
-  final userProvider = UserProvider(); // 🔴 INITIALIZE
+  final userProvider = UserProvider();
   await userProvider.init();
 
   runApp(
@@ -40,7 +40,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider.value(value: taskProvider),
         ChangeNotifierProvider.value(value: themeProvider),
-        ChangeNotifierProvider.value(value: userProvider), // 🔴 INJECT
+        ChangeNotifierProvider.value(value: userProvider),
       ],
       child: const ModernTodoApp(),
     ),
