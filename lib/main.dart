@@ -2,16 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
 
 import 'models/task.dart';
 import 'theme/app_theme.dart';
 import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/user_provider.dart'; // 🔴 IMPORT NEW PROVIDER
 import 'screens/main_screen.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
+  tz.initializeTimeZones();
+  await NotificationService().init();
 
   await Hive.initFlutter();
   Hive.registerAdapter(PriorityAdapter());
@@ -25,11 +31,15 @@ void main() async {
   final themeProvider = ThemeProvider();
   await themeProvider.init();
 
+  final userProvider = UserProvider(); // 🔴 INITIALIZE
+  await userProvider.init();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider.value(value: taskProvider),
         ChangeNotifierProvider.value(value: themeProvider),
+        ChangeNotifierProvider.value(value: userProvider), // 🔴 INJECT
       ],
       child: const ModernTodoApp(),
     ),
@@ -44,7 +54,7 @@ class ModernTodoApp extends StatelessWidget {
     final themeProvider = context.watch<ThemeProvider>();
 
     return MaterialApp(
-      title: 'Ezze Task Flow',
+      title: 'TaskFlow',
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.themeMode,
       theme: AppTheme.light(),

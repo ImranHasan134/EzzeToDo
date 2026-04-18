@@ -18,6 +18,7 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
 
   Priority _priority = Priority.medium;
   TaskCategory _category = TaskCategory.work;
+  DateTime? _deadline; // 🔴 NEW: Tracks the due date
 
   bool get isEdit => widget.task != null;
 
@@ -29,6 +30,7 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
       _descCtrl.text = widget.task!.description;
       _priority = widget.task!.priority;
       _category = widget.task!.category ?? TaskCategory.work;
+      _deadline = widget.task!.deadline; // 🔴 Load existing deadline
     }
   }
 
@@ -56,9 +58,10 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
       description: _descCtrl.text.trim(),
       priority: _priority,
       category: _category,
+      deadline: _deadline, // 🔴 Save the deadline
       createdAt: isEdit ? widget.task!.createdAt : null,
       status: isEdit ? widget.task!.status : TaskStatus.todo,
-      progress: isEdit ? widget.task!.progress : 0, // Preserves progress
+      progress: isEdit ? widget.task!.progress : 0,
     ));
 
     Navigator.pop(context);
@@ -72,16 +75,6 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isEdit ? 'Edit Task' : 'New Task'),
-        actions: [
-          TextButton(
-            onPressed: _saveTask,
-            child: Text(
-              'Save',
-              style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w700, fontSize: 16),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -94,13 +87,18 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
               decoration: InputDecoration(
                 hintText: 'What needs to be done?',
-                hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black26, fontWeight: FontWeight.w600),
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white30 : Colors.black26,
+                  fontWeight: FontWeight.w600,
+                ),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 enabledBorder: InputBorder.none,
               ),
             ),
+
             const SizedBox(height: 16),
+
             TextField(
               controller: _descCtrl,
               maxLines: null,
@@ -108,23 +106,81 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
               style: const TextStyle(fontSize: 16),
               decoration: InputDecoration(
                 hintText: 'Add details or notes...',
-                hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black26),
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.white30 : Colors.black26,
+                ),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 enabledBorder: InputBorder.none,
               ),
             ),
+
             const SizedBox(height: 32),
 
+            // ── DUE DATE PICKER ──
+            Text('Due Date', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 0.5)),
+            const SizedBox(height: 12),
+            InkWell(
+              onTap: () async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: _deadline ?? DateTime.now(),
+                  firstDate: DateTime.now(), // Prevent picking past dates for new tasks
+                  lastDate: DateTime(2100),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: isDark ? const ColorScheme.dark(primary: Color(0xFF3B8258)) : const ColorScheme.light(primary: Color(0xFF3B8258)),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+                if (date != null) setState(() => _deadline = date);
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: theme.cardTheme.color,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.calendar_today_rounded, size: 18, color: theme.colorScheme.primary),
+                    const SizedBox(width: 12),
+                    Text(
+                      _deadline == null ? 'Select a due date' : '${_deadline!.month}/${_deadline!.day}/${_deadline!.year}',
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: _deadline == null ? (isDark ? Colors.white30 : Colors.black38) : (isDark ? Colors.white : Colors.black87)
+                      ),
+                    ),
+                    const Spacer(),
+                    if (_deadline != null)
+                      GestureDetector(
+                        onTap: () => setState(() => _deadline = null),
+                        child: const Icon(Icons.close, size: 18, color: Colors.redAccent),
+                      )
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── CATEGORY SELECTOR ──
             Text('Category', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 0.5)),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: SegmentedButton<TaskCategory>(
                 segments: const [
-                  ButtonSegment(value: TaskCategory.work, label: Text('Workspace')),
-                  ButtonSegment(value: TaskCategory.portfolio, label: Text('Portfolio')),
-                  ButtonSegment(value: TaskCategory.personal, label: Text('Personal')),
+                  ButtonSegment(value: TaskCategory.work, label: FittedBox(fit: BoxFit.scaleDown, child: Text('Workspace'))),
+                  ButtonSegment(value: TaskCategory.portfolio, label: FittedBox(fit: BoxFit.scaleDown, child: Text('Portfolio'))),
+                  ButtonSegment(value: TaskCategory.personal, label: FittedBox(fit: BoxFit.scaleDown, child: Text('Personal'))),
                 ],
                 selected: {_category},
                 onSelectionChanged: (Set<TaskCategory> c) => setState(() => _category = c.first),
@@ -135,17 +191,19 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
                 ),
               ),
             ),
+
             const SizedBox(height: 24),
 
+            // ── PRIORITY SELECTOR ──
             Text('Priority Level', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 0.5)),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: SegmentedButton<Priority>(
                 segments: [
-                  ButtonSegment(value: Priority.low, label: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.low.color), const SizedBox(width: 6), Text(Priority.low.label)])),
-                  ButtonSegment(value: Priority.medium, label: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.medium.color), const SizedBox(width: 6), Text(Priority.medium.label)])),
-                  ButtonSegment(value: Priority.high, label: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.high.color), const SizedBox(width: 6), Text(Priority.high.label)])),
+                  ButtonSegment(value: Priority.low, label: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.low.color), const SizedBox(width: 6), Text(Priority.low.label)]))),
+                  ButtonSegment(value: Priority.medium, label: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.medium.color), const SizedBox(width: 6), Text(Priority.medium.label)]))),
+                  ButtonSegment(value: Priority.high, label: FittedBox(fit: BoxFit.scaleDown, child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.high.color), const SizedBox(width: 6), Text(Priority.high.label)]))),
                 ],
                 selected: {_priority},
                 onSelectionChanged: (Set<Priority> p) => setState(() => _priority = p.first),
@@ -159,6 +217,7 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
           ],
         ),
       ),
+
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 24),
@@ -169,7 +228,10 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
               backgroundColor: theme.colorScheme.primary,
             ),
             onPressed: _saveTask,
-            child: Text(isEdit ? 'Save Changes' : 'Create Task', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            child: Text(
+                isEdit ? 'Save Changes' : 'Create Task',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)
+            ),
           ),
         ),
       ),

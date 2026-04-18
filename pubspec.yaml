@@ -15,8 +15,13 @@ dependencies:
   hive_flutter: ^1.1.0
   uuid: ^4.2.1
   intl: ^0.18.1
-  fl_chart: ^0.66.2
   share_plus: ^7.2.1
+  flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.2
+  fl_chart: ^0.66.0
+  image_picker: ^1.0.7
+  pdf: ^3.10.8
+  printing: ^5.11.1
 
 dev_dependencies:
   flutter_test:

@@ -19,38 +19,47 @@ class TaskDetailScreen extends StatelessWidget {
     final isCompleted = task.status == TaskStatus.completed;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Task Details'),
-      ),
+      appBar: AppBar(title: const Text('Task Details')),
       body: ListView(
         padding: const EdgeInsets.all(24),
         physics: const BouncingScrollPhysics(),
         children: [
-          // Badges
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: task.priority.color.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
-                child: Row(
-                  children: [
-                    Icon(Icons.circle, size: 8, color: task.priority.color),
-                    const SizedBox(width: 6),
-                    Text(task.priority.label, style: TextStyle(color: task.priority.color, fontWeight: FontWeight.w700, fontSize: 12)),
-                  ],
-                ),
+          // 🔴 RECEIVING HERO WIDGET
+          Hero(
+            tag: 'task_card_${task.id}',
+            child: Material(
+              color: Colors.transparent,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(color: task.priority.color.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
+                        child: Row(
+                          children: [
+                            Icon(Icons.circle, size: 8, color: task.priority.color),
+                            const SizedBox(width: 6),
+                            Text(task.priority.label, style: TextStyle(color: task.priority.color, fontWeight: FontWeight.w700, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
+                        child: Text(task.safeCategory.name.toUpperCase(), style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w700, fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Text(task.title, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: isCompleted ? (isDark ? Colors.white30 : Colors.black38) : null, decoration: isCompleted ? TextDecoration.lineThrough : null)),
+                ],
               ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: theme.colorScheme.primary.withOpacity(0.15), borderRadius: BorderRadius.circular(20)),
-                child: Text(task.safeCategory.name.toUpperCase(), style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w700, fontSize: 12)),
-              ),
-            ],
+            ),
           ),
-          const SizedBox(height: 24),
 
-          Text(task.title, style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: isCompleted ? (isDark ? Colors.white30 : Colors.black38) : null, decoration: isCompleted ? TextDecoration.lineThrough : null)),
           if (task.description.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(task.description, style: TextStyle(fontSize: 16, height: 1.5, color: isDark ? Colors.white70 : Colors.black87)),
@@ -58,7 +67,6 @@ class TaskDetailScreen extends StatelessWidget {
 
           const SizedBox(height: 40),
 
-          // Progress Section
           Text('Progress', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white54 : Colors.black54)),
           const SizedBox(height: 16),
           Row(
@@ -66,12 +74,7 @@ class TaskDetailScreen extends StatelessWidget {
               Expanded(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: task.progress / 100,
-                    minHeight: 12,
-                    backgroundColor: theme.dividerColor,
-                    valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
-                  ),
+                  child: LinearProgressIndicator(value: task.progress / 100, minHeight: 12, backgroundColor: theme.dividerColor, valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary)),
                 ),
               ),
               const SizedBox(width: 16),
@@ -81,7 +84,6 @@ class TaskDetailScreen extends StatelessWidget {
         ],
       ),
 
-      // Bottom Action Buttons
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -89,11 +91,7 @@ class TaskDetailScreen extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    side: BorderSide(color: theme.colorScheme.primary, width: 2),
-                  ),
+                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), side: BorderSide(color: theme.colorScheme.primary, width: 2)),
                   onPressed: isCompleted ? null : () => _showProgressDialog(context, task, provider, theme),
                   child: const Text('Running', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
@@ -101,11 +99,7 @@ class TaskDetailScreen extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    backgroundColor: theme.colorScheme.primary,
-                  ),
+                  style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), backgroundColor: theme.colorScheme.primary),
                   onPressed: isCompleted ? null : () => _showCompletedDialog(context, task, provider, theme),
                   child: const Text('Completed', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                 ),
@@ -139,13 +133,9 @@ class TaskDetailScreen extends StatelessWidget {
                     data: SliderThemeData(trackHeight: 8, activeTrackColor: theme.colorScheme.primary, inactiveTrackColor: theme.dividerColor, thumbColor: theme.colorScheme.primary),
                     child: Slider(
                       value: sliderValue.toDouble(),
-                      min: 0,
-                      max: 100,
-                      divisions: 100,
+                      min: 0, max: 100, divisions: 100,
                       onChanged: (val) {
-                        if (val >= task.progress) { // 🔴 Prevents decreasing below current progress
-                          setState(() => sliderValue = val.toInt());
-                        }
+                        if (val >= task.progress) setState(() => sliderValue = val.toInt());
                       },
                     ),
                   ),
@@ -179,16 +169,13 @@ class TaskDetailScreen extends StatelessWidget {
         title: const Text('Complete Task?', style: TextStyle(fontWeight: FontWeight.w800)),
         content: const Text('Are you sure you want to mark this task as fully completed?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Recheck your progress', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text('Recheck', style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w600))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.primary),
             onPressed: () {
               provider.updateTaskProgress(task.id, 100);
               Navigator.pop(ctx);
-              Navigator.pop(context); // Return to list screen
+              Navigator.pop(context);
             },
             child: const Text('Mark Complete', style: TextStyle(fontWeight: FontWeight.w700)),
           ),

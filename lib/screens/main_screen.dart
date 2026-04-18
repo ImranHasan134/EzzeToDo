@@ -1,18 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/task_provider.dart';
 import 'home_screen.dart';
 import 'task_screen.dart';
 import 'stats_screen.dart';
 import 'profile_screen.dart';
 
-class RootScreen extends StatefulWidget {
+// Changed to StatelessWidget since State is now managed by TaskProvider
+class RootScreen extends StatelessWidget {
   const RootScreen({super.key});
-
-  @override
-  State<RootScreen> createState() => _RootScreenState();
-}
-
-class _RootScreenState extends State<RootScreen> {
-  int _currentIndex = 0;
 
   final List<Widget> _screens = const [
     HomeScreen(),
@@ -23,12 +19,13 @@ class _RootScreenState extends State<RootScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<TaskProvider>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       body: IndexedStack(
-        index: _currentIndex,
+        index: provider.navIndex, // 🔴 Controlled by Provider
         children: _screens,
       ),
       bottomNavigationBar: Container(
@@ -46,29 +43,29 @@ class _RootScreenState extends State<RootScreen> {
                   icon: Icons.home_outlined,
                   activeIcon: Icons.home_rounded,
                   label: 'Home',
-                  isSelected: _currentIndex == 0,
-                  onTap: () => setState(() => _currentIndex = 0),
+                  isSelected: provider.navIndex == 0,
+                  onTap: () => provider.setNavIndex(0), // 🔴 Updates Provider
                 ),
                 _NavItem(
                   icon: Icons.dashboard_outlined,
                   activeIcon: Icons.dashboard_rounded,
                   label: 'Tasks',
-                  isSelected: _currentIndex == 1,
-                  onTap: () => setState(() => _currentIndex = 1),
+                  isSelected: provider.navIndex == 1,
+                  onTap: () => provider.setNavIndex(1),
                 ),
                 _NavItem(
                   icon: Icons.insert_chart_outlined,
                   activeIcon: Icons.insert_chart_rounded,
                   label: 'Stats',
-                  isSelected: _currentIndex == 2,
-                  onTap: () => setState(() => _currentIndex = 2),
+                  isSelected: provider.navIndex == 2,
+                  onTap: () => provider.setNavIndex(2),
                 ),
                 _NavItem(
                   icon: Icons.person_outline,
                   activeIcon: Icons.person_rounded,
                   label: 'Profile',
-                  isSelected: _currentIndex == 3,
-                  onTap: () => setState(() => _currentIndex = 3),
+                  isSelected: provider.navIndex == 3,
+                  onTap: () => provider.setNavIndex(3),
                 ),
               ],
             ),
@@ -115,7 +112,6 @@ class _NavItem extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          // Active Indicator Dot
           Container(
             width: 4,
             height: 4,
