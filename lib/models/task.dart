@@ -15,6 +15,14 @@ enum TaskStatus {
   @HiveField(2) completed,
 }
 
+// NEW: Category Enum
+@HiveType(typeId: 3)
+enum TaskCategory {
+  @HiveField(0) personal,
+  @HiveField(1) work,
+  @HiveField(2) portfolio,
+}
+
 @HiveType(typeId: 2)
 class Task extends HiveObject {
   @HiveField(0) final String id;
@@ -25,6 +33,7 @@ class Task extends HiveObject {
   @HiveField(5) final TaskStatus status;
   @HiveField(6) final DateTime createdAt;
   @HiveField(7) final DateTime? completedAt;
+  @HiveField(8) final TaskCategory category; // NEW: Category Field
 
   Task({
     String? id,
@@ -33,6 +42,7 @@ class Task extends HiveObject {
     this.deadline,
     this.priority = Priority.medium,
     this.status = TaskStatus.todo,
+    this.category = TaskCategory.personal, // Default category
     DateTime? createdAt,
     this.completedAt,
   })  : id = id ?? const Uuid().v4(),
@@ -44,6 +54,7 @@ class Task extends HiveObject {
     DateTime? deadline,
     Priority? priority,
     TaskStatus? status,
+    TaskCategory? category,
     DateTime? completedAt,
     bool clearDeadline = false,
   }) {
@@ -54,12 +65,11 @@ class Task extends HiveObject {
       deadline: clearDeadline ? null : (deadline ?? this.deadline),
       priority: priority ?? this.priority,
       status: status ?? this.status,
+      category: category ?? this.category,
       createdAt: createdAt,
       completedAt: completedAt ?? this.completedAt,
     );
   }
-
-  // ... copyWith method ...
 
   bool get isOverdue {
     if (deadline == null || status == TaskStatus.completed) return false;
@@ -68,7 +78,6 @@ class Task extends HiveObject {
         .isBefore(DateTime(now.year, now.month, now.day));
   }
 
-  // Add the missing getter right here:
   bool get isDueToday {
     if (deadline == null) return false;
     final now = DateTime.now();
@@ -76,10 +85,10 @@ class Task extends HiveObject {
         deadline!.month == now.month &&
         deadline!.day == now.day;
   }
-} // <-- End of Task class
+}
 
 // ════════════════════════════════════════════════════════════
-// HIVE ADAPTERS (Required for the generated .g.dart file)
+// HIVE ADAPTERS
 // ════════════════════════════════════════════════════════════
 class PriorityAdapter extends TypeAdapter<Priority> {
   @override
@@ -99,6 +108,16 @@ class TaskStatusAdapter extends TypeAdapter<TaskStatus> {
   void write(BinaryWriter writer, TaskStatus obj) => writer.writeByte(obj.index);
 }
 
+// NEW: Category Adapter
+class TaskCategoryAdapter extends TypeAdapter<TaskCategory> {
+  @override
+  final int typeId = 3;
+  @override
+  TaskCategory read(BinaryReader reader) => TaskCategory.values[reader.readByte()];
+  @override
+  void write(BinaryWriter writer, TaskCategory obj) => writer.writeByte(obj.index);
+}
+
 class TaskAdapter extends TypeAdapter<Task> {
   @override
   final int typeId = 2;
@@ -116,12 +135,13 @@ class TaskAdapter extends TypeAdapter<Task> {
       status: fields[5] as TaskStatus,
       createdAt: fields[6] as DateTime,
       completedAt: fields[7] as DateTime?,
+      category: fields[8] as TaskCategory? ?? TaskCategory.personal, // Fallback
     );
   }
   @override
   void write(BinaryWriter writer, Task obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9) // Updated to 9 fields
       ..writeByte(0)..write(obj.id)
       ..writeByte(1)..write(obj.title)
       ..writeByte(2)..write(obj.description)
@@ -129,6 +149,7 @@ class TaskAdapter extends TypeAdapter<Task> {
       ..writeByte(4)..write(obj.priority)
       ..writeByte(5)..write(obj.status)
       ..writeByte(6)..write(obj.createdAt)
-      ..writeByte(7)..write(obj.completedAt);
+      ..writeByte(7)..write(obj.completedAt)
+      ..writeByte(8)..write(obj.category); // Added Category
   }
 }

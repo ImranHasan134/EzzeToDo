@@ -3,6 +3,30 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
 
 class TaskProvider extends ChangeNotifier {
+
+  String _homeTab = 'All'; // Keeps track of the selected tab on Home Screen
+  String get homeTab => _homeTab;
+
+  void setHomeTab(String tab) {
+    _homeTab = tab;
+    notifyListeners();
+  }
+
+  // This provides the filtered tasks for the Home Screen based on the clicked tab
+  List<Task> get homeFilteredTasks {
+    var baseList = activeTasks; // Always start with pending/running tasks
+
+    if (_homeTab == 'Workspace') {
+      return baseList.where((t) => t.category == TaskCategory.work).toList();
+    } else if (_homeTab == 'Portfolio') {
+      return baseList.where((t) => t.category == TaskCategory.portfolio).toList();
+    } else if (_homeTab == 'Personal') {
+      return baseList.where((t) => t.category == TaskCategory.personal).toList();
+    }
+
+    return baseList; // Returns 'All' pending tasks if 'All' is selected
+  }
+
   late Box<Task> _box;
   List<Task> _tasks = [];
   String _searchQuery = '';
@@ -62,6 +86,12 @@ class TaskProvider extends ChangeNotifier {
       );
     }
     _tasks = _box.values.toList();
+    notifyListeners();
+  }
+
+  Future<void> clearAllTasks() async {
+    await _box.clear();
+    _tasks = [];
     notifyListeners();
   }
 

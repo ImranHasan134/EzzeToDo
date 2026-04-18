@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
-import '../screens/add_or_edit_screen.dart';
+import '../screens/add_or_edit_screen.dart'; // Ensure this matches your actual file structure
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -47,11 +47,27 @@ class HomeScreen extends StatelessWidget {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: const [
-                  _TabItem('All', isSelected: true),
-                  _TabItem('Workspace', isSelected: false),
-                  _TabItem('Portfolio', isSelected: false),
-                  _TabItem('Personal', isSelected: false),
+                children: [
+                  _TabItem(
+                    'All',
+                    isSelected: provider.homeTab == 'All',
+                    onTap: () => provider.setHomeTab('All'),
+                  ),
+                  _TabItem(
+                    'Workspace',
+                    isSelected: provider.homeTab == 'Workspace',
+                    onTap: () => provider.setHomeTab('Workspace'),
+                  ),
+                  _TabItem(
+                    'Portfolio',
+                    isSelected: provider.homeTab == 'Portfolio',
+                    onTap: () => provider.setHomeTab('Portfolio'),
+                  ),
+                  _TabItem(
+                    'Personal',
+                    isSelected: provider.homeTab == 'Personal',
+                    onTap: () => provider.setHomeTab('Personal'),
+                  ),
                 ],
               ),
             ),
@@ -105,7 +121,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-          // Task Today List
+          // Task List Header
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -115,7 +131,10 @@ class HomeScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text('Task Today', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                      Text(
+                          provider.homeTab == 'All' ? 'All Pending Tasks' : '${provider.homeTab} Tasks',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)
+                      ),
                       Text('See All', style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
                     ],
                   ),
@@ -125,6 +144,7 @@ class HomeScreen extends StatelessWidget {
             ),
           ),
 
+          // Filtered Task List
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverList(
@@ -132,10 +152,11 @@ class HomeScreen extends StatelessWidget {
                     (context, index) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _TaskListItem(task: provider.todayTasks[index]),
+                    // Use the filtered list based on the selected tab
+                    child: _TaskListItem(task: provider.homeFilteredTasks[index]),
                   );
                 },
-                childCount: provider.todayTasks.length,
+                childCount: provider.homeFilteredTasks.length,
               ),
             ),
           ),
@@ -145,7 +166,7 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AddTaskScreen()),
+          MaterialPageRoute(builder: (context) => const AddOrEditScreen()),
         ),
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: Colors.white,
@@ -163,30 +184,36 @@ class HomeScreen extends StatelessWidget {
 class _TabItem extends StatelessWidget {
   final String label;
   final bool isSelected;
-  const _TabItem(this.label, {required this.isSelected});
+  final VoidCallback onTap;
+
+  const _TabItem(this.label, {required this.isSelected, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final color = isSelected ? theme.colorScheme.primary : (theme.brightness == Brightness.dark ? Colors.white54 : Colors.black54);
 
-    return Container(
-      margin: const EdgeInsets.only(right: 24),
-      padding: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: isSelected ? theme.colorScheme.primary : Colors.transparent,
-            width: 2,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.only(right: 24),
+        padding: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isSelected ? theme.colorScheme.primary : Colors.transparent,
+              width: 2,
+            ),
           ),
         ),
-      ),
-      child: Center(
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: color,
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: color,
+            ),
           ),
         ),
       ),

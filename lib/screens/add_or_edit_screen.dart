@@ -3,17 +3,37 @@ import 'package:provider/provider.dart';
 import '../models/task.dart';
 import '../providers/task_provider.dart';
 
-class AddTaskScreen extends StatefulWidget {
-  const AddTaskScreen({super.key});
+class AddOrEditScreen extends StatefulWidget {
+  final Task? task;
+
+  // If a task is passed in, the screen acts as an Editor.
+  // If null, it acts as a Creator.
+  const AddOrEditScreen({super.key, this.task});
 
   @override
-  State<AddTaskScreen> createState() => _AddTaskScreenState();
+  State<AddOrEditScreen> createState() => _AddOrEditScreenState();
 }
 
-class _AddTaskScreenState extends State<AddTaskScreen> {
+class _AddOrEditScreenState extends State<AddOrEditScreen> {
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
+
   Priority _priority = Priority.medium;
+  TaskCategory _category = TaskCategory.work; // Default category
+
+  bool get isEdit => widget.task != null;
+
+  @override
+  void initState() {
+    super.initState();
+    // If editing, pre-fill the data
+    if (isEdit) {
+      _titleCtrl.text = widget.task!.title;
+      _descCtrl.text = widget.task!.description;
+      _priority = widget.task!.priority;
+      _category = widget.task!.category;
+    }
+  }
 
   @override
   void dispose() {
@@ -33,10 +53,15 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       return;
     }
 
+    // Save or Update the task
     context.read<TaskProvider>().saveTask(Task(
+      id: isEdit ? widget.task!.id : null, // Preserve ID if editing
       title: _titleCtrl.text.trim(),
       description: _descCtrl.text.trim(),
       priority: _priority,
+      category: _category,
+      createdAt: isEdit ? widget.task!.createdAt : null, // Preserve creation date
+      status: isEdit ? widget.task!.status : TaskStatus.todo, // Preserve status
     ));
 
     Navigator.pop(context);
@@ -49,7 +74,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New Task'),
+        title: Text(isEdit ? 'Edit Task' : 'New Task'),
         actions: [
           TextButton(
             onPressed: _saveTask,
@@ -70,10 +95,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
           padding: const EdgeInsets.all(24),
           physics: const BouncingScrollPhysics(),
           children: [
-            // Task Title Input
+            // ── TASK TITLE ──────────────────────────────────────────
             TextField(
               controller: _titleCtrl,
-              autofocus: true,
+              autofocus: !isEdit,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
               decoration: InputDecoration(
                 hintText: 'What needs to be done?',
@@ -89,7 +114,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
             const SizedBox(height: 16),
 
-            // Task Description Input
+            // ── TASK DESCRIPTION ────────────────────────────────────
             TextField(
               controller: _descCtrl,
               maxLines: null,
@@ -108,7 +133,38 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
 
             const SizedBox(height: 32),
 
-            // Priority Label
+            // ── CATEGORY SELECTOR ───────────────────────────────────
+            Text(
+              'Category',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white54 : Colors.black54,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<TaskCategory>(
+                segments: const [
+                  ButtonSegment(value: TaskCategory.work, label: Text('Workspace')),
+                  ButtonSegment(value: TaskCategory.portfolio, label: Text('Portfolio')),
+                  ButtonSegment(value: TaskCategory.personal, label: Text('Personal')),
+                ],
+                selected: {_category},
+                onSelectionChanged: (Set<TaskCategory> c) => setState(() => _category = c.first),
+                style: SegmentedButton.styleFrom(
+                  selectedBackgroundColor: theme.colorScheme.primary.withOpacity(0.15),
+                  selectedForegroundColor: theme.colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // ── PRIORITY SELECTOR ───────────────────────────────────
             Text(
               'Priority Level',
               style: TextStyle(
@@ -118,10 +174,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                 letterSpacing: 0.5,
               ),
             ),
-
             const SizedBox(height: 12),
-
-            // Priority Selector
             SizedBox(
               width: double.infinity,
               child: SegmentedButton<Priority>(
@@ -143,7 +196,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
         ),
       ),
 
-      // Large Bottom Save Button for easy thumb access
+      // ── BOTTOM SAVE BUTTON ────────────────────────────────────────
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 24),
@@ -154,7 +207,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
               backgroundColor: theme.colorScheme.primary,
             ),
             onPressed: _saveTask,
-            child: const Text('Create Task', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            child: Text(
+                isEdit ? 'Save Changes' : 'Create Task',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)
+            ),
           ),
         ),
       ),

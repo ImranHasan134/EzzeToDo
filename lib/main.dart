@@ -6,7 +6,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'models/task.dart';
 import 'theme/app_theme.dart';
 import 'providers/task_provider.dart';
-import 'screens/main_screen.dart'; // <-- Updated import
+import 'providers/theme_provider.dart';
+import 'screens/main_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,14 +16,21 @@ void main() async {
   await Hive.initFlutter();
   Hive.registerAdapter(PriorityAdapter());
   Hive.registerAdapter(TaskStatusAdapter());
+  Hive.registerAdapter(TaskCategoryAdapter());
   Hive.registerAdapter(TaskAdapter());
 
   final taskProvider = TaskProvider();
   await taskProvider.init();
 
+  final themeProvider = ThemeProvider();
+  await themeProvider.init();
+
   runApp(
-    ChangeNotifierProvider.value(
-      value: taskProvider,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: taskProvider),
+        ChangeNotifierProvider.value(value: themeProvider),
+      ],
       child: const ModernTodoApp(),
     ),
   );
@@ -33,13 +41,15 @@ class ModernTodoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+
     return MaterialApp(
-      title: 'TaskFlow',
+      title: 'Ezze Task Flow',
       debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.system,
+      themeMode: themeProvider.themeMode,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      home: const RootScreen(), // <-- Updated to RootScreen
+      home: const RootScreen(),
     );
   }
 }
