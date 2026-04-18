@@ -36,7 +36,6 @@ class PdfService {
       ),
     );
 
-    // This opens the native device PDF preview/print/share dialog
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => doc.save(),
       name: 'TaskFlow_Report_${DateTime.now().millisecondsSinceEpoch}.pdf',
@@ -106,9 +105,11 @@ class PdfService {
             child: pw.Chart(
               grid: pw.PieGrid(),
               datasets: [
-                pw.PieDataSet(value: catData['Workspace']!.toDouble(), color: PdfColors.blue, legend: 'Workspace'),
-                pw.PieDataSet(value: catData['Portfolio']!.toDouble(), color: PdfColors.purple, legend: 'Portfolio'),
-                pw.PieDataSet(value: catData['Personal']!.toDouble(), color: PdfColors.orange, legend: 'Personal'),
+                // 🔴 FIX 1: Removed the `legend` parameter. This prevents the text
+                // from rendering inside the pie slices and breaking the layout.
+                pw.PieDataSet(value: catData['Workspace']!.toDouble(), color: PdfColors.blue),
+                pw.PieDataSet(value: catData['Portfolio']!.toDouble(), color: PdfColors.purple),
+                pw.PieDataSet(value: catData['Personal']!.toDouble(), color: PdfColors.orange),
               ],
             ),
           ),
@@ -152,7 +153,11 @@ class PdfService {
           cellStyle: const pw.TextStyle(fontSize: 10),
           cellPadding: const pw.EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           rowDecoration: const pw.BoxDecoration(border: pw.Border(bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5))),
+
+          // 🔴 FIX 2: Explicitly left-align the headers so they match the data alignment perfectly
+          headerAlignment: pw.Alignment.centerLeft,
           cellAlignment: pw.Alignment.centerLeft,
+
           columnWidths: {
             0: const pw.FlexColumnWidth(3),
             1: const pw.FlexColumnWidth(1.5),

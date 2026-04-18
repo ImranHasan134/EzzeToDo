@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
-import '../providers/user_provider.dart'; // 🔴 RESTORED IMPORT
+import '../providers/user_provider.dart';
 import '../models/task.dart';
 import 'add_or_edit_screen.dart';
 import 'task_detail_screen.dart';
@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<TaskProvider>();
-    final userProvider = context.watch<UserProvider>(); // 🔴 RESTORED PROVIDER
+    final userProvider = context.watch<UserProvider>();
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -58,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔴 RESTORED DYNAMIC FIRST NAME
             Text('Hey, ${userProvider.firstName}! 👋', style: const TextStyle(fontWeight: FontWeight.w800)),
             Text(
               'These are ${provider.activeTasks.length} tasks waiting for you',
@@ -125,7 +124,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   key: PageStorageKey<String>(tabName),
                   physics: const BouncingScrollPhysics(),
                   slivers: [
-
                     if (tabName == 'All')
                       SliverToBoxAdapter(
                         child: Padding(
@@ -449,6 +447,9 @@ class _TaskListItem extends StatelessWidget {
     final isCompleted = task.status == TaskStatus.completed;
     final isOverdue = task.isOverdue;
 
+    // 🔴 THE MASTER COLOR FIX: This forces EVERYTHING to be Green when 100% complete
+    final activeColor = isCompleted ? theme.colorScheme.primary : task.priority.color;
+
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: task.id))),
       child: Hero(
@@ -464,7 +465,8 @@ class _TaskListItem extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Container(width: 4, height: 40, decoration: BoxDecoration(color: task.priority.color, borderRadius: BorderRadius.circular(2))),
+                // 🔴 FIX: The side stripe now turns Green when done
+                Container(width: 4, height: 40, decoration: BoxDecoration(color: activeColor, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -531,17 +533,19 @@ class _TaskListItem extends StatelessWidget {
                                   value: task.progress / 100,
                                   minHeight: 6,
                                   backgroundColor: theme.dividerColor,
-                                  valueColor: AlwaysStoppedAnimation(isCompleted ? theme.colorScheme.primary : task.priority.color)
+                                  // 🔴 FIX: The bar turns strictly Green when done
+                                  valueColor: AlwaysStoppedAnimation(activeColor)
                               ),
                             ),
                           ),
                           const SizedBox(width: 12),
+                          // 🔴 FIX: The Text turns strictly Green when done
                           Text(
                               '${task.progress}%',
                               style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w800,
-                                  color: isCompleted ? theme.colorScheme.primary : task.priority.color
+                                  color: activeColor
                               )
                           ),
                         ],

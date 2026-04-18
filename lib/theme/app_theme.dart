@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primary = Color(0xFF3B8258); // Forest Green from image
+  static const Color primary = Color(0xFF0050FF);
   static const Color primaryDark = Color(0xFF2D6343);
   static const Color surfaceLight = Colors.white;
   static const Color backgroundLight = Color(0xFFF8F9FA);

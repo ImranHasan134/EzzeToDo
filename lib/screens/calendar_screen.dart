@@ -73,6 +73,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 final task = dateTasks[index];
                 final isCompleted = task.status == TaskStatus.completed;
                 final isOverdue = task.isOverdue;
+                final activeColor = isCompleted ? Colors.green : task.priority.color;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -91,7 +92,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           ),
                           child: Row(
                             children: [
-                              Container(width: 4, height: 40, decoration: BoxDecoration(color: task.priority.color, borderRadius: BorderRadius.circular(2))),
+                              Container(width: 4, height: 40, decoration: BoxDecoration(color: activeColor, borderRadius: BorderRadius.circular(2))),
                               const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
@@ -154,25 +155,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                                         Expanded(
                                           child: ClipRRect(
                                             borderRadius: BorderRadius.circular(4),
-                                            child: LinearProgressIndicator(
-                                                value: task.progress / 100,
-                                                minHeight: 6,
-                                                backgroundColor: theme.dividerColor,
-                                                // 🔴 FIX: Now explicitly turns primary green when completed!
-                                                valueColor: AlwaysStoppedAnimation(isCompleted ? theme.colorScheme.primary : task.priority.color)
-                                            ),
+                                            child: LinearProgressIndicator(value: task.progress / 100, minHeight: 6, backgroundColor: theme.dividerColor, valueColor: AlwaysStoppedAnimation(activeColor)),
                                           ),
                                         ),
                                         const SizedBox(width: 12),
-                                        // 🔴 FIX: Text turns green when completed!
-                                        Text(
-                                            '${task.progress}%',
-                                            style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w800,
-                                                color: isCompleted ? theme.colorScheme.primary : task.priority.color
-                                            )
-                                        ),
+                                        Text('${task.progress}%', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: activeColor)),
                                       ],
                                     ),
                                   ],
