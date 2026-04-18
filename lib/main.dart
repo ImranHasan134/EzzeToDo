@@ -8,9 +8,10 @@ import 'models/task.dart';
 import 'theme/app_theme.dart';
 import 'providers/task_provider.dart';
 import 'providers/theme_provider.dart';
-import 'providers/user_provider.dart'; // 🔴 IMPORT NEW PROVIDER
+import 'providers/user_provider.dart';
 import 'screens/main_screen.dart';
 import 'services/notification_service.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -59,7 +60,7 @@ class ModernTodoApp extends StatelessWidget {
       themeMode: themeProvider.themeMode,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      home: const RootScreen(),
+      home: const SplashScreen(),
     );
   }
 }
