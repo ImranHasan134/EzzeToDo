@@ -3,33 +3,18 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
 
 class TaskProvider extends ChangeNotifier {
+  late Box<Task> _box;
+  List<Task> _tasks = [];
+  String _searchQuery = '';
+  String _homeTab = 'All';
 
-  String _homeTab = 'All'; // Keeps track of the selected tab on Home Screen
   String get homeTab => _homeTab;
+  String get searchQuery => _searchQuery; // <-- Added missing getter
 
   void setHomeTab(String tab) {
     _homeTab = tab;
     notifyListeners();
   }
-
-  // This provides the filtered tasks for the Home Screen based on the clicked tab
-  List<Task> get homeFilteredTasks {
-    var baseList = activeTasks; // Always start with pending/running tasks
-
-    if (_homeTab == 'Workspace') {
-      return baseList.where((t) => t.category == TaskCategory.work).toList();
-    } else if (_homeTab == 'Portfolio') {
-      return baseList.where((t) => t.category == TaskCategory.portfolio).toList();
-    } else if (_homeTab == 'Personal') {
-      return baseList.where((t) => t.category == TaskCategory.personal).toList();
-    }
-
-    return baseList; // Returns 'All' pending tasks if 'All' is selected
-  }
-
-  late Box<Task> _box;
-  List<Task> _tasks = [];
-  String _searchQuery = '';
 
   List<Task> get allTasks => List.unmodifiable(_tasks);
 
@@ -41,7 +26,13 @@ class TaskProvider extends ChangeNotifier {
   }).toList()
     ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-  List<Task> get todayTasks => activeTasks.where((t) => t.isDueToday || t.deadline == null).toList();
+  List<Task> get homeFilteredTasks {
+    var baseList = activeTasks;
+    if (_homeTab == 'Workspace') return baseList.where((t) => t.safeCategory == TaskCategory.work).toList();
+    if (_homeTab == 'Portfolio') return baseList.where((t) => t.safeCategory == TaskCategory.portfolio).toList();
+    if (_homeTab == 'Personal') return baseList.where((t) => t.safeCategory == TaskCategory.personal).toList();
+    return baseList;
+  }
 
   int get totalTasks => _tasks.length;
   int get completedTasks => _tasks.where((t) => t.status == TaskStatus.completed).length;
@@ -73,6 +64,12 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> clearAllTasks() async {
+    await _box.clear();
+    _tasks = [];
+    notifyListeners();
+  }
+
   Future<void> toggleTaskCompletion(String id) async {
     final t = _box.get(id);
     if (t != null) {
@@ -81,6 +78,7 @@ class TaskProvider extends ChangeNotifier {
         id,
         t.copyWith(
           status: isCompleting ? TaskStatus.completed : TaskStatus.todo,
+          progress: isCompleting ? 100 : 0,
           completedAt: isCompleting ? DateTime.now() : null,
         ),
       );
@@ -89,10 +87,34 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> clearAllTasks() async {
-    await _box.clear();
-    _tasks = [];
-    notifyListeners();
+  Future<void> updateTaskProgress(String id, int newProgress) async {
+    final t = _box.get(id);
+    if (t != null) {
+      TaskStatus newStatus = t.status;
+      DateTime? completedAt = t.completedAt;
+
+      if (newProgress == 100) {
+        newStatus = TaskStatus.completed;
+        completedAt = DateTime.now();
+      } else if (newProgress > 0) {
+        newStatus = TaskStatus.inProgress;
+        completedAt = null;
+      } else {
+        newStatus = TaskStatus.todo;
+        completedAt = null;
+      }
+
+      await _box.put(
+        id,
+        t.copyWith(
+          progress: newProgress,
+          status: newStatus,
+          completedAt: completedAt,
+        ),
+      );
+      _tasks = _box.values.toList();
+      notifyListeners();
+    }
   }
 
   void setSearchQuery(String query) {

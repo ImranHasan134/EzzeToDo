@@ -2,10 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
-import '../screens/add_or_edit_screen.dart'; // Ensure this matches your actual file structure
+import 'add_or_edit_screen.dart';
+import 'task_detail_screen.dart'; // <-- Fixed missing import
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late PageController _pageController;
+  final List<String> _tabs = ['All', 'Workspace', 'Portfolio', 'Personal'];
+
+  @override
+  void initState() {
+    super.initState();
+    final initialTab = context.read<TaskProvider>().homeTab;
+    final initialIndex = _tabs.indexOf(initialTab).clamp(0, 3);
+    _pageController = PageController(initialPage: initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  List<Task> _getTasksForTab(TaskProvider provider, String tab) {
+    var baseList = provider.activeTasks;
+    if (tab == 'Workspace') return baseList.where((t) => t.safeCategory == TaskCategory.work).toList();
+    if (tab == 'Portfolio') return baseList.where((t) => t.safeCategory == TaskCategory.portfolio).toList();
+    if (tab == 'Personal') return baseList.where((t) => t.safeCategory == TaskCategory.personal).toList();
+    return baseList;
+  }
+
+  Task? _getHighlightForTab(List<Task> tabTasks) {
+    final running = tabTasks.where((t) => t.status == TaskStatus.inProgress).toList();
+    if (running.isNotEmpty) return running.first;
+    if (tabTasks.isNotEmpty) return tabTasks.first;
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,138 +67,149 @@ class HomeScreen extends StatelessWidget {
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none_rounded),
-            onPressed: () {},
-          ),
-          const SizedBox(width: 8),
-        ],
       ),
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          // Horizontal Tabs
-          SliverToBoxAdapter(
-            child: SizedBox(
-              height: 50,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _TabItem(
-                    'All',
-                    isSelected: provider.homeTab == 'All',
-                    onTap: () => provider.setHomeTab('All'),
-                  ),
-                  _TabItem(
-                    'Workspace',
-                    isSelected: provider.homeTab == 'Workspace',
-                    onTap: () => provider.setHomeTab('Workspace'),
-                  ),
-                  _TabItem(
-                    'Portfolio',
-                    isSelected: provider.homeTab == 'Portfolio',
-                    onTap: () => provider.setHomeTab('Portfolio'),
-                  ),
-                  _TabItem(
-                    'Personal',
-                    isSelected: provider.homeTab == 'Personal',
-                    onTap: () => provider.setHomeTab('Personal'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // 2x2 Grid Stats
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: _GridStatCard(title: 'Total Tasks', value: '${provider.totalTasks}', subtitle: 'All time records')),
-                      const SizedBox(width: 12),
-                      Expanded(child: _GridStatCard(title: 'Ended Tasks', value: '${provider.completedTasks}', subtitle: 'Successfully finished')),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(child: _GridStatCard(title: 'Running', value: '${provider.runningTasks}', subtitle: 'Currently active')),
-                      const SizedBox(width: 12),
-                      Expanded(child: _GridStatCard(title: 'Pending', value: '${provider.pendingTasks}', subtitle: 'Waiting to start')),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          // "On Progress" Highlight Card
-          if (provider.highlightedTask != null)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('On Progress', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                        Text('See All', style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _HighlightCard(task: provider.highlightedTask!),
-                  ],
-                ),
-              ),
-            ),
-
-          // Task List Header
-          SliverToBoxAdapter(
-            child: Padding(
+      body: Column(
+        children: [
+          // ── TABS HEADER ──
+          SizedBox(
+            height: 50,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                          provider.homeTab == 'All' ? 'All Pending Tasks' : '${provider.homeTab} Tasks',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)
-                      ),
-                      Text('See All', style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
+              itemCount: _tabs.length,
+              itemBuilder: (context, index) {
+                final tabName = _tabs[index];
+                final isSelected = provider.homeTab == tabName;
+
+                return _TabItem(
+                  tabName,
+                  isSelected: isSelected,
+                  onTap: () {
+                    provider.setHomeTab(tabName);
+                    _pageController.animateToPage(
+                      index,
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeOutCubic,
+                    );
+                  },
+                );
+              },
             ),
           ),
 
-          // Filtered Task List
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    // Use the filtered list based on the selected tab
-                    child: _TaskListItem(task: provider.homeFilteredTasks[index]),
-                  );
-                },
-                childCount: provider.homeFilteredTasks.length,
-              ),
+          // ── SWIPEABLE PAGES ──
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              physics: const BouncingScrollPhysics(),
+              onPageChanged: (index) => provider.setHomeTab(_tabs[index]),
+              itemCount: _tabs.length,
+              itemBuilder: (context, pageIndex) {
+                final tabName = _tabs[pageIndex];
+                final tabTasks = _getTasksForTab(provider, tabName);
+                final tabHighlight = _getHighlightForTab(tabTasks);
+
+                return CustomScrollView(
+                  key: PageStorageKey<String>(tabName),
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+
+                    // ── STATS (Only on 'All') ──
+                    if (tabName == 'All')
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(child: _GridStatCard(title: 'Total Tasks', value: '${provider.totalTasks}', subtitle: 'All time records')),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: _GridStatCard(title: 'Ended Tasks', value: '${provider.completedTasks}', subtitle: 'Successfully finished')),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(child: _GridStatCard(title: 'Running', value: '${provider.runningTasks}', subtitle: 'Currently active')),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: _GridStatCard(title: 'Pending', value: '${provider.pendingTasks}', subtitle: 'Waiting to start')),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    // ── HIGHLIGHT CARD ──
+                    if (tabHighlight != null)
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text('On Progress', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                                  Text('See All', style: TextStyle(fontSize: 13, color: theme.colorScheme.primary, fontWeight: FontWeight.w600)),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              _HighlightCard(task: tabHighlight),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                    // ── LIST HEADER ──
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  tabName == 'All' ? 'All Pending Tasks' : '$tabName Tasks',
+                                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    // ── ANIMATED TASK LIST ──
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                              (context, taskIndex) {
+                            return _FadeAndSlidePop(
+                              key: ValueKey('${tabName}_${tabTasks[taskIndex].id}'),
+                              index: taskIndex,
+                              child: Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _TaskListItem(task: tabTasks[taskIndex]),
+                              ),
+                            );
+                          },
+                          childCount: tabTasks.length,
+                        ),
+                      ),
+                    ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 100)),
+                  ],
+                );
+              },
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 80)), // Padding for FAB
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -178,7 +227,56 @@ class HomeScreen extends StatelessWidget {
 }
 
 // ════════════════════════════════════════════════════════════
-// SUB-WIDGETS FOR HOME SCREEN
+// STAGGERED POP-IN ANIMATION
+// ════════════════════════════════════════════════════════════
+
+class _FadeAndSlidePop extends StatefulWidget {
+  final Widget child;
+  final int index;
+
+  const _FadeAndSlidePop({super.key, required this.child, required this.index});
+
+  @override
+  State<_FadeAndSlidePop> createState() => _FadeAndSlidePopState();
+}
+
+class _FadeAndSlidePopState extends State<_FadeAndSlidePop> with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+  late Animation<double> _fade;
+  late Animation<Offset> _slide;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _fade = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+    _slide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic));
+
+    Future.delayed(Duration(milliseconds: widget.index * 60), () {
+      if (mounted) _ctrl.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fade,
+      child: SlideTransition(
+        position: _slide,
+        child: widget.child,
+      ),
+    );
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// SUB-WIDGETS
 // ════════════════════════════════════════════════════════════
 
 class _TabItem extends StatelessWidget {
@@ -305,9 +403,15 @@ class _HighlightCard extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  task.priority.name.toUpperCase(),
-                  style: TextStyle(color: theme.colorScheme.primary, fontSize: 10, fontWeight: FontWeight.w800),
+                child: Row(
+                  children: [
+                    Icon(Icons.circle, size: 8, color: task.priority.color),
+                    const SizedBox(width: 4),
+                    Text(
+                      task.priority.label.toUpperCase(),
+                      style: TextStyle(color: theme.colorScheme.primary, fontSize: 10, fontWeight: FontWeight.w800),
+                    ),
+                  ],
                 ),
               )
             ],
@@ -325,62 +429,65 @@ class _TaskListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final provider = context.read<TaskProvider>();
+    final isDark = theme.brightness == Brightness.dark;
     final isCompleted = task.status == TaskStatus.completed;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => provider.toggleTaskCompletion(task.id),
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isCompleted ? theme.colorScheme.primary : Colors.transparent,
-                border: Border.all(
-                  color: isCompleted ? theme.colorScheme.primary : theme.dividerColor,
-                  width: 2,
-                ),
-              ),
-              child: isCompleted ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    decoration: isCompleted ? TextDecoration.lineThrough : null,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(Icons.calendar_today_outlined, size: 12, color: theme.textTheme.bodySmall?.color),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Created: ${task.createdAt.month}/${task.createdAt.day}',
-                      style: TextStyle(fontSize: 12, color: theme.textTheme.bodySmall?.color),
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: task.id))),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.cardTheme.color,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: theme.dividerColor),
+        ),
+        child: Row(
+          children: [
+            Container(width: 4, height: 40, decoration: BoxDecoration(color: task.priority.color, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      decoration: isCompleted ? TextDecoration.lineThrough : null,
+                      color: isCompleted ? (isDark ? Colors.white30 : Colors.black38) : null,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: task.progress / 100,
+                            minHeight: 6,
+                            backgroundColor: theme.dividerColor,
+                            valueColor: AlwaysStoppedAnimation(isCompleted ? theme.dividerColor : task.priority.color),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '${task.progress}%',
+                        style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: isCompleted ? (isDark ? Colors.white30 : Colors.black38) : task.priority.color
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../models/task.dart';
+import 'add_or_edit_screen.dart'; // <-- Fixed missing import
+import 'task_detail_screen.dart'; // <-- Fixed missing import
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
@@ -20,19 +22,19 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
-    // Local filtering to allow viewing completed tasks
+    // Properly filtering the tasks based on both Search AND the Status Tab
     final displayTasks = provider.allTasks.where((t) {
-      // 1. Apply Search
-      final matchesSearch = provider.highlightedTask == null || // Using query indirectly or checking raw text
-          t.title.toLowerCase().contains(provider.allTasks.toString().toLowerCase()) || true; // Simplification for UI focus
+      final query = provider.searchQuery.toLowerCase();
+      final matchesSearch = query.isEmpty ||
+          t.title.toLowerCase().contains(query) ||
+          t.description.toLowerCase().contains(query);
 
-      // 2. Apply Status Filter
       bool matchesFilter = true;
       if (_filter == 'To Do') matchesFilter = t.status == TaskStatus.todo;
       if (_filter == 'In Progress') matchesFilter = t.status == TaskStatus.inProgress;
       if (_filter == 'Completed') matchesFilter = t.status == TaskStatus.completed;
 
-      return matchesFilter; // Add search matching logic back if needed explicitly
+      return matchesSearch && matchesFilter;
     }).toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -120,65 +122,74 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: theme.cardTheme.color,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: theme.dividerColor),
-              ),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => provider.toggleTaskCompletion(task.id),
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isCompleted ? theme.colorScheme.primary : Colors.transparent,
-                        border: Border.all(
-                            color: isCompleted ? theme.colorScheme.primary : theme.dividerColor,
-                            width: 2
-                        ),
-                      ),
-                      child: isCompleted ? const Icon(Icons.check, size: 14, color: Colors.white) : null,
+            child: GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: task.id))),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: theme.cardTheme.color,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                        width: 4,
+                        height: 40,
+                        decoration: BoxDecoration(color: task.priority.color, borderRadius: BorderRadius.circular(2))
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                            task.title,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              decoration: isCompleted ? TextDecoration.lineThrough : null,
-                              color: isCompleted ? (isDark ? Colors.white30 : Colors.black38) : null,
-                            )
-                        ),
-                        if (task.description.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            task.description,
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: isCompleted ? (isDark ? Colors.white24 : Colors.black26) : theme.textTheme.bodySmall?.color
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                              task.title,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                color: isCompleted ? (isDark ? Colors.white30 : Colors.black38) : null,
+                              )
                           ),
-                        ]
-                      ],
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(4),
+                                  child: LinearProgressIndicator(
+                                    value: task.progress / 100,
+                                    minHeight: 6,
+                                    backgroundColor: theme.dividerColor,
+                                    valueColor: AlwaysStoppedAnimation(isCompleted ? theme.dividerColor : task.priority.color),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                  '${task.progress}%',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: isCompleted ? (isDark ? Colors.white30 : Colors.black38) : task.priority.color
+                                  )
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-                    onPressed: () => provider.deleteTask(task.id),
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.edit_outlined, color: Colors.blueAccent, size: 20),
+                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddOrEditScreen(task: task))),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                      onPressed: () => provider.deleteTask(task.id),
+                    ),
+                  ],
+                ),
               ),
             ),
           );

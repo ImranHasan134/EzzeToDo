@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
@@ -8,6 +9,24 @@ enum Priority {
   @HiveField(2) low,
 }
 
+extension PriorityExtension on Priority {
+  Color get color {
+    switch (this) {
+      case Priority.high: return const Color(0xFFE24B4A);
+      case Priority.medium: return const Color(0xFFF59E0B);
+      case Priority.low: return const Color(0xFF3B82F6);
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case Priority.high: return 'High';
+      case Priority.medium: return 'Medium';
+      case Priority.low: return 'Low';
+    }
+  }
+}
+
 @HiveType(typeId: 1)
 enum TaskStatus {
   @HiveField(0) todo,
@@ -15,7 +34,6 @@ enum TaskStatus {
   @HiveField(2) completed,
 }
 
-// NEW: Category Enum
 @HiveType(typeId: 3)
 enum TaskCategory {
   @HiveField(0) personal,
@@ -33,7 +51,8 @@ class Task extends HiveObject {
   @HiveField(5) final TaskStatus status;
   @HiveField(6) final DateTime createdAt;
   @HiveField(7) final DateTime? completedAt;
-  @HiveField(8) final TaskCategory category; // NEW: Category Field
+  @HiveField(8) final TaskCategory? category;
+  @HiveField(9) final int progress; // 🔴 NEW: Progress Tracking (0-100)
 
   Task({
     String? id,
@@ -42,11 +61,14 @@ class Task extends HiveObject {
     this.deadline,
     this.priority = Priority.medium,
     this.status = TaskStatus.todo,
-    this.category = TaskCategory.personal, // Default category
+    this.category = TaskCategory.work,
+    this.progress = 0,
     DateTime? createdAt,
     this.completedAt,
   })  : id = id ?? const Uuid().v4(),
         createdAt = createdAt ?? DateTime.now();
+
+  TaskCategory get safeCategory => category ?? TaskCategory.work;
 
   Task copyWith({
     String? title,
@@ -55,6 +77,7 @@ class Task extends HiveObject {
     Priority? priority,
     TaskStatus? status,
     TaskCategory? category,
+    int? progress,
     DateTime? completedAt,
     bool clearDeadline = false,
   }) {
@@ -66,6 +89,7 @@ class Task extends HiveObject {
       priority: priority ?? this.priority,
       status: status ?? this.status,
       category: category ?? this.category,
+      progress: progress ?? this.progress,
       createdAt: createdAt,
       completedAt: completedAt ?? this.completedAt,
     );
@@ -108,7 +132,6 @@ class TaskStatusAdapter extends TypeAdapter<TaskStatus> {
   void write(BinaryWriter writer, TaskStatus obj) => writer.writeByte(obj.index);
 }
 
-// NEW: Category Adapter
 class TaskCategoryAdapter extends TypeAdapter<TaskCategory> {
   @override
   final int typeId = 3;
@@ -135,13 +158,14 @@ class TaskAdapter extends TypeAdapter<Task> {
       status: fields[5] as TaskStatus,
       createdAt: fields[6] as DateTime,
       completedAt: fields[7] as DateTime?,
-      category: fields[8] as TaskCategory? ?? TaskCategory.personal, // Fallback
+      category: fields[8] as TaskCategory?,
+      progress: fields[9] as int? ?? 0, // Fallback for safety
     );
   }
   @override
   void write(BinaryWriter writer, Task obj) {
     writer
-      ..writeByte(9) // Updated to 9 fields
+      ..writeByte(10)
       ..writeByte(0)..write(obj.id)
       ..writeByte(1)..write(obj.title)
       ..writeByte(2)..write(obj.description)
@@ -150,6 +174,7 @@ class TaskAdapter extends TypeAdapter<Task> {
       ..writeByte(5)..write(obj.status)
       ..writeByte(6)..write(obj.createdAt)
       ..writeByte(7)..write(obj.completedAt)
-      ..writeByte(8)..write(obj.category); // Added Category
+      ..writeByte(8)..write(obj.category)
+      ..writeByte(9)..write(obj.progress);
   }
 }

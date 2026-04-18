@@ -6,8 +6,6 @@ import '../providers/task_provider.dart';
 class AddOrEditScreen extends StatefulWidget {
   final Task? task;
 
-  // If a task is passed in, the screen acts as an Editor.
-  // If null, it acts as a Creator.
   const AddOrEditScreen({super.key, this.task});
 
   @override
@@ -19,19 +17,18 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
   final _descCtrl = TextEditingController();
 
   Priority _priority = Priority.medium;
-  TaskCategory _category = TaskCategory.work; // Default category
+  TaskCategory _category = TaskCategory.work;
 
   bool get isEdit => widget.task != null;
 
   @override
   void initState() {
     super.initState();
-    // If editing, pre-fill the data
     if (isEdit) {
       _titleCtrl.text = widget.task!.title;
       _descCtrl.text = widget.task!.description;
       _priority = widget.task!.priority;
-      _category = widget.task!.category;
+      _category = widget.task!.category ?? TaskCategory.work;
     }
   }
 
@@ -53,15 +50,15 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
       return;
     }
 
-    // Save or Update the task
     context.read<TaskProvider>().saveTask(Task(
-      id: isEdit ? widget.task!.id : null, // Preserve ID if editing
+      id: isEdit ? widget.task!.id : null,
       title: _titleCtrl.text.trim(),
       description: _descCtrl.text.trim(),
       priority: _priority,
       category: _category,
-      createdAt: isEdit ? widget.task!.createdAt : null, // Preserve creation date
-      status: isEdit ? widget.task!.status : TaskStatus.todo, // Preserve status
+      createdAt: isEdit ? widget.task!.createdAt : null,
+      status: isEdit ? widget.task!.status : TaskStatus.todo,
+      progress: isEdit ? widget.task!.progress : 0, // Preserves progress
     ));
 
     Navigator.pop(context);
@@ -80,11 +77,7 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
             onPressed: _saveTask,
             child: Text(
               'Save',
-              style: TextStyle(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: theme.colorScheme.primary, fontWeight: FontWeight.w700, fontSize: 16),
             ),
           ),
           const SizedBox(width: 8),
@@ -95,26 +88,19 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
           padding: const EdgeInsets.all(24),
           physics: const BouncingScrollPhysics(),
           children: [
-            // ── TASK TITLE ──────────────────────────────────────────
             TextField(
               controller: _titleCtrl,
               autofocus: !isEdit,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
               decoration: InputDecoration(
                 hintText: 'What needs to be done?',
-                hintStyle: TextStyle(
-                  color: isDark ? Colors.white30 : Colors.black26,
-                  fontWeight: FontWeight.w600,
-                ),
+                hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black26, fontWeight: FontWeight.w600),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 enabledBorder: InputBorder.none,
               ),
             ),
-
             const SizedBox(height: 16),
-
-            // ── TASK DESCRIPTION ────────────────────────────────────
             TextField(
               controller: _descCtrl,
               maxLines: null,
@@ -122,27 +108,15 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
               style: const TextStyle(fontSize: 16),
               decoration: InputDecoration(
                 hintText: 'Add details or notes...',
-                hintStyle: TextStyle(
-                  color: isDark ? Colors.white30 : Colors.black26,
-                ),
+                hintStyle: TextStyle(color: isDark ? Colors.white30 : Colors.black26),
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 enabledBorder: InputBorder.none,
               ),
             ),
-
             const SizedBox(height: 32),
 
-            // ── CATEGORY SELECTOR ───────────────────────────────────
-            Text(
-              'Category',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white54 : Colors.black54,
-                letterSpacing: 0.5,
-              ),
-            ),
+            Text('Category', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 0.5)),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -161,27 +135,17 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
 
-            // ── PRIORITY SELECTOR ───────────────────────────────────
-            Text(
-              'Priority Level',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: isDark ? Colors.white54 : Colors.black54,
-                letterSpacing: 0.5,
-              ),
-            ),
+            Text('Priority Level', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: isDark ? Colors.white54 : Colors.black54, letterSpacing: 0.5)),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: SegmentedButton<Priority>(
-                segments: const [
-                  ButtonSegment(value: Priority.low, label: Text('Low')),
-                  ButtonSegment(value: Priority.medium, label: Text('Medium')),
-                  ButtonSegment(value: Priority.high, label: Text('High')),
+                segments: [
+                  ButtonSegment(value: Priority.low, label: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.low.color), const SizedBox(width: 6), Text(Priority.low.label)])),
+                  ButtonSegment(value: Priority.medium, label: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.medium.color), const SizedBox(width: 6), Text(Priority.medium.label)])),
+                  ButtonSegment(value: Priority.high, label: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.circle, size: 10, color: Priority.high.color), const SizedBox(width: 6), Text(Priority.high.label)])),
                 ],
                 selected: {_priority},
                 onSelectionChanged: (Set<Priority> p) => setState(() => _priority = p.first),
@@ -195,8 +159,6 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
           ],
         ),
       ),
-
-      // ── BOTTOM SAVE BUTTON ────────────────────────────────────────
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 24),
@@ -207,10 +169,7 @@ class _AddOrEditScreenState extends State<AddOrEditScreen> {
               backgroundColor: theme.colorScheme.primary,
             ),
             onPressed: _saveTask,
-            child: Text(
-                isEdit ? 'Save Changes' : 'Create Task',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)
-            ),
+            child: Text(isEdit ? 'Save Changes' : 'Create Task', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
           ),
         ),
       ),
